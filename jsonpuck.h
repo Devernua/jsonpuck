@@ -936,16 +936,10 @@ js_sizeof_array(uint32_t size)
 JS_IMPL char *
 js_encode_array(char *data, uint32_t size)
 {
-	if (size <= 15) {
-		return js_store_u8(data, 0x90 | size);
-	} else if (size <= UINT16_MAX) {
-		data = js_store_u8(data, 0xdc);
-		data = js_store_u16(data, size);
-		return data;
-	} else {
-		data = js_store_u8(data, 0xdd);
-		return js_store_u32(data, size);
-	}
+	sprintf(data, "[");
+	//TODO::STACK
+	//stack push ARRAY(size);
+	return ++data;
 }
 
 JS_IMPL ptrdiff_t
@@ -1007,17 +1001,10 @@ js_sizeof_map(uint32_t size)
 JS_IMPL char *
 js_encode_map(char *data, uint32_t size)
 {
-	if (size <= 15) {
-		return js_store_u8(data, 0x80 | size);
-	} else if (size <= UINT16_MAX) {
-		data = js_store_u8(data, 0xde);
-		data = js_store_u16(data, size);
-		return data;
-	} else {
-		data = js_store_u8(data, 0xdf);
-		data = js_store_u32(data, size);
-		return data;
-	}
+	sprintf(data, "{");
+	//TODO::STACK
+	//stack push ARRAY(size);
+	return ++data;
 }
 
 JS_IMPL ptrdiff_t
@@ -1104,42 +1091,19 @@ js_check_int(const char *cur, const char *end)
 JS_IMPL char *
 js_encode_uint(char *data, uint64_t num)
 {
-	if (num <= 0x7f) {
-		return js_store_u8(data, num);
-	} else if (num <= UINT8_MAX) {
-		data = js_store_u8(data, 0xcc);
-		return js_store_u8(data, num);
-	} else if (num <= UINT16_MAX) {
-		data = js_store_u8(data, 0xcd);
-		return js_store_u16(data, num);
-	} else if (num <= UINT32_MAX) {
-		data = js_store_u8(data, 0xce);
-		return js_store_u32(data, num);
-	} else {
-		data = js_store_u8(data, 0xcf);
-		return js_store_u64(data, num);
-	}
+	sprintf(data,"%llu", num);
+	//TODO::STACK
+	//stack key or value or end: sprintf(...);
+	return data + strlen(data);;
 }
 
 JS_IMPL char *
 js_encode_int(char *data, int64_t num)
 {
-	assert(num < 0);
-	if (num >= -0x20) {
-		return js_store_u8(data, 0xe0 | num);
-	} else if (num >= INT8_MIN) {
-		data = js_store_u8(data, 0xd0);
-		return js_store_u8(data, num);
-	} else if (num >= INT16_MIN) {
-		data = js_store_u8(data, 0xd1);
-		return js_store_u16(data, num);
-	} else if (num >= INT32_MIN) {
-		data = js_store_u8(data, 0xd2);
-		return js_store_u32(data, num);
-	} else {
-		data = js_store_u8(data, 0xd3);
-		return js_store_u64(data, num);
-	}
+	sprintf(data,"%lli", num);
+	//TODO::STACK
+	//stack key or value or end: sprintf(...);
+	return data + strlen(data);;
 }
 
 JS_IMPL uint64_t
@@ -1255,15 +1219,19 @@ js_check_double(const char *cur, const char *end)
 JS_IMPL char *
 js_encode_float(char *data, float num)
 {
-	data = js_store_u8(data, 0xca);
-	return js_store_float(data, num);
+	sprintf(data,"%f", num);//TODO:CHECK_IT
+	//TODO::STACK
+	//stack key or value or end: sprintf(...);
+	return data + strlen(data);
 }
 
 JS_IMPL char *
 js_encode_double(char *data, double num)
 {
-	data = js_store_u8(data, 0xcb);
-	return js_store_double(data, num);
+	sprintf(data,"%f", num); //TODO:CHECK_IT
+	//TODO::STACK
+	//stack key or value or end: sprintf(...);
+	return data + strlen(data);
 }
 
 JS_IMPL float
@@ -1342,9 +1310,11 @@ js_encode_strl(char *data, uint32_t len)
 JS_IMPL char *
 js_encode_str(char *data, const char *str, uint32_t len)
 {
-	data = js_encode_strl(data, len);
-	memcpy(data, str, len);
-	return data + len;
+	sprintf(data,"\"%s\"", str);
+	//TODO::STACK
+	//stack key or value or end: sprintf(...);
+	assert(strlen(data) == len + 2); //TODO:fix len
+	return data + len + 2;
 }
 
 JS_IMPL char *
@@ -1499,7 +1469,10 @@ js_sizeof_nil()
 JS_IMPL char *
 js_encode_nil(char *data)
 {
-	return js_store_u8(data, 0xc0);
+	sprintf(data, "null");
+	//TODO::STACK
+	//stack key or value or end: sprintf(...);
+	return data + 4;
 }
 
 JS_IMPL ptrdiff_t
@@ -1528,7 +1501,10 @@ js_sizeof_bool(bool val)
 JS_IMPL char *
 js_encode_bool(char *data, bool val)
 {
-	return js_store_u8(data, 0xc2 | (val & 1));
+	sprintf(data,"%s", (val) ? "true" : "false");
+	//TODO::STACK
+	//stack key or value or end: sprintf(...);
+	return data + ((val) ? 4 : 5);
 }
 
 JS_IMPL ptrdiff_t
