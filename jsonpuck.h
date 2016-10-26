@@ -1,7 +1,7 @@
-#ifndef MSGPUCK_H_INCLUDED
-#define MSGPUCK_H_INCLUDED
+#ifndef JSONPUCK_H_INCLUDED
+#define JSONPUCK_H_INCLUDED
 /*
- * Copyright (c) 2013-2016 MsgPuck Authors
+ * Copyright (c) 2013-2016 JSONPuck Authors
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or
@@ -33,9 +33,9 @@
  */
 
 /**
- * \file msgpuck.h
- * MsgPuck
- * \brief MsgPuck is a simple and efficient MsgPack encoder/decoder
+ * \file jsonpuck.h
+ * JSONPuck
+ * \brief JSONPuck is a simple and efficient JSONPack encoder/decoder
  * library in a single self-contained file.
  *
  * Usage example:
@@ -43,15 +43,15 @@
  * // Encode
  * char buf[1024];
  * char *w = buf;
- * w = mp_encode_array(w, 4)
- * w = mp_encode_uint(w, 10);
- * w = mp_encode_str(w, "hello world", strlen("hello world"));
- * w = mp_encode_bool(w, true);
- * w = mp_encode_double(w, 3.1415);
+ * w = js_encode_array(w, 4)
+ * w = js_encode_uint(w, 10);
+ * w = js_encode_str(w, "hello world", strlen("hello world"));
+ * w = js_encode_bool(w, true);
+ * w = js_encode_double(w, 3.1415);
  *
  * // Validate
  * const char *b = buf;
- * int r = mp_check(&b, w);
+ * int r = js_check(&b, w);
  * assert(!r)
  * assert(b == w);
  *
@@ -65,19 +65,19 @@
  *
  * const char *r = buf;
  *
- * size = mp_decode_array(&r);
+ * size = js_decode_array(&r);
  * // size is 4
  *
- * ival = mp_decode_uint(&r);
+ * ival = js_decode_uint(&r);
  * // ival is 10;
  *
- * sval = mp_decode_str(&r, &sval_len);
+ * sval = js_decode_str(&r, &sval_len);
  * // sval is "hello world", sval_len is strlen("hello world")
  *
- * bval = mp_decode_bool(&r);
+ * bval = js_decode_bool(&r);
  * // bval is true
  *
- * dval = mp_decode_double(&r);
+ * dval = js_decode_double(&r);
  * // dval is 3.1415
  *
  * assert(r == w);
@@ -88,7 +88,7 @@
  *
  * \note Inline functions.
  * The implementation is compatible with both C99 and GNU inline functions.
- * Please define MP_SOURCE 1 before \#include <msgpuck.h> in a single
+ * Please define JS_SOURCE 1 before \#include <jsonpuck.h> in a single
  * compilation unit. This module will be used to store non-inlined versions of
  * functions and global tables.
  */
@@ -119,36 +119,36 @@ extern "C" {
 /** \cond false **/
 
 #if defined(__CC_ARM)         /* set the alignment to 1 for armcc compiler */
-#define MP_PACKED    __packed
+#define JS_PACKED    __packed
 #else
-#define MP_PACKED  __attribute__((packed))
+#define JS_PACKED  __attribute__((packed))
 #endif
 
 #if defined(__GNUC__) && !defined(__GNUC_STDC_INLINE__)
-#if !defined(MP_SOURCE)
-#define MP_PROTO extern inline
-#define MP_IMPL extern inline
-#else /* defined(MP_SOURCE) */
-#define MP_PROTO
-#define MP_IMPL
+#if !defined(JS_SOURCE)
+#define JS_PROTO extern inline
+#define JS_IMPL extern inline
+#else /* defined(JS_SOURCE) */
+#define JS_PROTO
+#define JS_IMPL
 #endif
-#define MP_ALWAYSINLINE
+#define JS_ALWAYSINLINE
 #else /* C99 inline */
-#if !defined(MP_SOURCE)
-#define MP_PROTO inline
-#define MP_IMPL inline
-#else /* defined(MP_SOURCE) */
-#define MP_PROTO extern inline
-#define MP_IMPL inline
+#if !defined(JS_SOURCE)
+#define JS_PROTO inline
+#define JS_IMPL inline
+#else /* defined(JS_SOURCE) */
+#define JS_PROTO extern inline
+#define JS_IMPL inline
 #endif
-#define MP_ALWAYSINLINE __attribute__((always_inline))
+#define JS_ALWAYSINLINE __attribute__((always_inline))
 #endif /* GNU inline or C99 inline */
 
 #if !defined __GNUC_MINOR__ || defined __INTEL_COMPILER || \
 	defined __SUNPRO_C || defined __SUNPRO_CC
-#define MP_GCC_VERSION(major, minor) 0
+#define JS_GCC_VERSION(major, minor) 0
 #else
-#define MP_GCC_VERSION(major, minor) (__GNUC__ > (major) || \
+#define JS_GCC_VERSION(major, minor) (__GNUC__ > (major) || \
 	(__GNUC__ == (major) && __GNUC_MINOR__ >= (minor)))
 #endif
 
@@ -156,48 +156,48 @@ extern "C" {
 #define __has_builtin(x) 0 /* clang */
 #endif
 
-#if MP_GCC_VERSION(2, 9) || __has_builtin(__builtin_expect)
-#define mp_likely(x) __builtin_expect((x), 1)
-#define mp_unlikely(x) __builtin_expect((x), 0)
+#if JS_GCC_VERSION(2, 9) || __has_builtin(__builtin_expect)
+#define js_likely(x) __builtin_expect((x), 1)
+#define js_unlikely(x) __builtin_expect((x), 0)
 #else
-#define mp_likely(x) (x)
-#define mp_unlikely(x) (x)
+#define js_likely(x) (x)
+#define js_unlikely(x) (x)
 #endif
 
-#if MP_GCC_VERSION(4, 5) || __has_builtin(__builtin_unreachable)
-#define mp_unreachable() (assert(0), __builtin_unreachable())
+#if JS_GCC_VERSION(4, 5) || __has_builtin(__builtin_unreachable)
+#define js_unreachable() (assert(0), __builtin_unreachable())
 #else
-MP_PROTO void
-mp_unreachable(void) __attribute__((noreturn));
-MP_PROTO void
-mp_unreachable(void) { assert(0); abort(); }
-#define mp_unreachable() (assert(0))
+JS_PROTO void
+js_unreachable(void) __attribute__((noreturn));
+JS_PROTO void
+js_unreachable(void) { assert(0); abort(); }
+#define js_unreachable() (assert(0))
 #endif
 
-#define mp_identity(x) (x) /* just to simplify mp_load/mp_store macroses */
+#define js_identity(x) (x) /* just to simplify js_load/js_store macroses */
 
-#if MP_GCC_VERSION(4, 8) || __has_builtin(__builtin_bswap16)
-#define mp_bswap_u16(x) __builtin_bswap16(x)
-#else /* !MP_GCC_VERSION(4, 8) */
-#define mp_bswap_u16(x) ( \
+#if JS_GCC_VERSION(4, 8) || __has_builtin(__builtin_bswap16)
+#define js_bswap_u16(x) __builtin_bswap16(x)
+#else /* !JS_GCC_VERSION(4, 8) */
+#define js_bswap_u16(x) ( \
 	(((x) <<  8) & 0xff00) | \
 	(((x) >>  8) & 0x00ff) )
 #endif
 
-#if MP_GCC_VERSION(4, 3) || __has_builtin(__builtin_bswap32)
-#define mp_bswap_u32(x) __builtin_bswap32(x)
-#else /* !MP_GCC_VERSION(4, 3) */
-#define mp_bswap_u32(x) ( \
+#if JS_GCC_VERSION(4, 3) || __has_builtin(__builtin_bswap32)
+#define js_bswap_u32(x) __builtin_bswap32(x)
+#else /* !JS_GCC_VERSION(4, 3) */
+#define js_bswap_u32(x) ( \
 	(((x) << 24) & UINT32_C(0xff000000)) | \
 	(((x) <<  8) & UINT32_C(0x00ff0000)) | \
 	(((x) >>  8) & UINT32_C(0x0000ff00)) | \
 	(((x) >> 24) & UINT32_C(0x000000ff)) )
 #endif
 
-#if MP_GCC_VERSION(4, 3) || __has_builtin(__builtin_bswap64)
-#define mp_bswap_u64(x) __builtin_bswap64(x)
-#else /* !MP_GCC_VERSION(4, 3) */
-#define mp_bswap_u64(x) (\
+#if JS_GCC_VERSION(4, 3) || __has_builtin(__builtin_bswap64)
+#define js_bswap_u64(x) __builtin_bswap64(x)
+#else /* !JS_GCC_VERSION(4, 3) */
+#define js_bswap_u64(x) (\
 	(((x) << 56) & UINT64_C(0xff00000000000000)) | \
 	(((x) << 40) & UINT64_C(0x00ff000000000000)) | \
 	(((x) << 24) & UINT64_C(0x0000ff0000000000)) | \
@@ -208,40 +208,40 @@ mp_unreachable(void) { assert(0); abort(); }
 	(((x) >> 56) & UINT64_C(0x00000000000000ff)) )
 #endif
 
-#define MP_LOAD_STORE(name, type, bswap)					\
-MP_PROTO type									\
-mp_load_##name(const char **data);						\
-MP_IMPL type									\
-mp_load_##name(const char **data)						\
+#define JS_LOAD_STORE(name, type, bswap)					\
+JS_PROTO type									\
+js_load_##name(const char **data);						\
+JS_IMPL type									\
+js_load_##name(const char **data)						\
 {										\
-	struct MP_PACKED cast { type val; };					\
+	struct JS_PACKED cast { type val; };					\
 	type val = bswap(((struct cast *) *data)->val);				\
 	*data += sizeof(type);							\
 	return val;								\
 }										\
-MP_PROTO char *									\
-mp_store_##name(char *data, type val);						\
-MP_IMPL char *									\
-mp_store_##name(char *data, type val)						\
+JS_PROTO char *									\
+js_store_##name(char *data, type val);						\
+JS_IMPL char *									\
+js_store_##name(char *data, type val)						\
 {										\
-	struct MP_PACKED cast { type val; };					\
+	struct JS_PACKED cast { type val; };					\
 	((struct cast *) (data))->val = bswap(val);				\
 	return data + sizeof(type);						\
 }
 
-MP_LOAD_STORE(u8, uint8_t, mp_identity);
+JS_LOAD_STORE(u8, uint8_t, js_identity);
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 
-MP_LOAD_STORE(u16, uint16_t, mp_bswap_u16);
-MP_LOAD_STORE(u32, uint32_t, mp_bswap_u32);
-MP_LOAD_STORE(u64, uint64_t, mp_bswap_u64);
+JS_LOAD_STORE(u16, uint16_t, js_bswap_u16);
+JS_LOAD_STORE(u32, uint32_t, js_bswap_u32);
+JS_LOAD_STORE(u64, uint64_t, js_bswap_u64);
 
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 
-MP_LOAD_STORE(u16, uint16_t, mp_identity);
-MP_LOAD_STORE(u32, uint32_t, mp_identity);
-MP_LOAD_STORE(u64, uint64_t, mp_identity);
+JS_LOAD_STORE(u16, uint16_t, js_identity);
+JS_LOAD_STORE(u32, uint32_t, js_identity);
+JS_LOAD_STORE(u64, uint64_t, js_identity);
 
 #else
 #error Unsupported __BYTE_ORDER__
@@ -254,80 +254,80 @@ MP_LOAD_STORE(u64, uint64_t, mp_identity);
 #if __FLOAT_WORD_ORDER__ == __ORDER_LITTLE_ENDIAN__
 
 /*
- * Idiots from msgpack.org byte-swaps even IEEE754 float/double types.
+ * Idiots from jsonpack.org byte-swaps even IEEE754 float/double types.
  * Some platforms (e.g. arm) cause SIGBUS on attempt to store
- * invalid float in registers, so code like flt = mp_bswap_float(flt)
+ * invalid float in registers, so code like flt = js_bswap_float(flt)
  * can't be used here.
  */
 
-union MP_PACKED mp_float_cast {
+union JS_PACKED js_float_cast {
 	uint32_t u32;
 	float f;
 };
 
-union MP_PACKED mp_double_cast {
+union JS_PACKED js_double_cast {
 	uint64_t u64;
 	double d;
 };
 
-MP_PROTO float
-mp_load_float(const char **data);
-MP_PROTO double
-mp_load_double(const char **data);
-MP_PROTO char *
-mp_store_float(char *data, float val);
-MP_PROTO char *
-mp_store_double(char *data, double val);
+JS_PROTO float
+js_load_float(const char **data);
+JS_PROTO double
+js_load_double(const char **data);
+JS_PROTO char *
+js_store_float(char *data, float val);
+JS_PROTO char *
+js_store_double(char *data, double val);
 
-MP_IMPL float
-mp_load_float(const char **data)
+JS_IMPL float
+js_load_float(const char **data)
 {
-	union mp_float_cast cast = *(union mp_float_cast *) *data;
+	union js_float_cast cast = *(union js_float_cast *) *data;
 	*data += sizeof(cast);
-	cast.u32 = mp_bswap_u32(cast.u32);
+	cast.u32 = js_bswap_u32(cast.u32);
 	return cast.f;
 }
 
-MP_IMPL double
-mp_load_double(const char **data)
+JS_IMPL double
+js_load_double(const char **data)
 {
-	union mp_double_cast cast = *(union mp_double_cast *) *data;
+	union js_double_cast cast = *(union js_double_cast *) *data;
 	*data += sizeof(cast);
-	cast.u64 = mp_bswap_u64(cast.u64);
+	cast.u64 = js_bswap_u64(cast.u64);
 	return cast.d;
 }
 
-MP_IMPL char *
-mp_store_float(char *data, float val)
+JS_IMPL char *
+js_store_float(char *data, float val)
 {
-	union mp_float_cast cast;
+	union js_float_cast cast;
 	cast.f = val;
-	cast.u32 = mp_bswap_u32(cast.u32);
-	*(union mp_float_cast *) (data) = cast;
+	cast.u32 = js_bswap_u32(cast.u32);
+	*(union js_float_cast *) (data) = cast;
 	return data + sizeof(cast);
 }
 
-MP_IMPL char *
-mp_store_double(char *data, double val)
+JS_IMPL char *
+js_store_double(char *data, double val)
 {
-	union mp_double_cast cast;
+	union js_double_cast cast;
 	cast.d = val;
-	cast.u64 = mp_bswap_u64(cast.u64);
-	*(union mp_double_cast *) (data) = cast;
+	cast.u64 = js_bswap_u64(cast.u64);
+	*(union js_double_cast *) (data) = cast;
 	return data + sizeof(cast);
 }
 
 #elif __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
 
-MP_LOAD_STORE(float, float, mp_identity);
-MP_LOAD_STORE(double, double, mp_identity);
+JS_LOAD_STORE(float, float, js_identity);
+JS_LOAD_STORE(double, double, js_identity);
 
 #else
 #error Unsupported __FLOAT_WORD_ORDER__
 #endif
 
-#undef mp_identity
-#undef MP_LOAD_STORE
+#undef js_identity
+#undef JS_LOAD_STORE
 
 /** \endcond */
 
@@ -340,35 +340,35 @@ MP_LOAD_STORE(double, double, mp_identity);
  */
 
 /**
- * \brief MsgPack data types
+ * \brief JSONPack data types
  */
-enum mp_type {
-	MP_NIL = 0,
-	MP_UINT,
-	MP_INT,
-	MP_STR,
-	MP_BIN,
-	MP_ARRAY,
-	MP_MAP,
-	MP_BOOL,
-	MP_FLOAT,
-	MP_DOUBLE,
-	MP_EXT
+enum js_type {
+	JS_NIL = 0,
+	JS_UINT,
+	JS_INT,
+	JS_STR,
+	JS_BIN,
+	JS_ARRAY,
+	JS_MAP,
+	JS_BOOL,
+	JS_FLOAT,
+	JS_DOUBLE,
+	JS_EXT
 };
 
 /**
- * \brief Determine MsgPack type by a first byte \a c of encoded data.
+ * \brief Determine JSONPack type by a first byte \a c of encoded data.
  *
  * Example usage:
  * \code
- * assert(MP_ARRAY == mp_typeof(0x90));
+ * assert(JS_ARRAY == js_typeof(0x90));
  * \endcode
  *
  * \param c - a first byte of encoded data
- * \return MsgPack type
+ * \return JSONPack type
  */
-MP_PROTO __attribute__((pure)) enum mp_type
-mp_typeof(const char c);
+JS_PROTO __attribute__((pure)) enum js_type
+js_typeof(const char c);
 
 /**
  * \brief Calculate exact buffer size needed to store an array header of
@@ -377,8 +377,8 @@ mp_typeof(const char c);
  * \param size - a number of elements
  * \return buffer size in bytes (max is 5)
  */
-MP_PROTO __attribute__((const)) uint32_t
-mp_sizeof_array(uint32_t size);
+JS_PROTO __attribute__((const)) uint32_t
+js_sizeof_array(uint32_t size);
 
 /**
  * \brief Encode an array header of \a size elements.
@@ -390,26 +390,26 @@ mp_sizeof_array(uint32_t size);
  * // Encode
  * char buf[1024];
  * char *w = buf;
- * w = mp_encode_array(w, 2)
- * w = mp_encode_uint(w, 10);
- * w = mp_encode_uint(w, 15);
+ * w = js_encode_array(w, 2)
+ * w = js_encode_uint(w, 10);
+ * w = js_encode_uint(w, 15);
  *
  * // Decode
  * const char *r = buf;
- * uint32_t size = mp_decode_array(&r);
+ * uint32_t size = js_decode_array(&r);
  * for (uint32_t i = 0; i < size; i++) {
- *     uint64_t val = mp_decode_uint(&r);
+ *     uint64_t val = js_decode_uint(&r);
  * }
  * assert (r == w);
  * \endcode
  * It is your responsibility to ensure that \a data has enough space.
  * \param data - a buffer
  * \param size - a number of elements
- * \return \a data + \link mp_sizeof_array() mp_sizeof_array(size) \endlink
- * \sa mp_sizeof_array
+ * \return \a data + \link js_sizeof_array() js_sizeof_array(size) \endlink
+ * \sa js_sizeof_array
  */
-MP_PROTO char *
-mp_encode_array(char *data, uint32_t size);
+JS_PROTO char *
+js_encode_array(char *data, uint32_t size);
 
 /**
  * \brief Check that \a cur buffer has enough bytes to decode an array header
@@ -418,22 +418,22 @@ mp_encode_array(char *data, uint32_t size);
  * \retval 0 - buffer has enough bytes
  * \retval > 0 - the number of remaining bytes to read
  * \pre cur < end
- * \pre mp_typeof(*cur) == MP_ARRAY
+ * \pre js_typeof(*cur) == JS_ARRAY
  */
-MP_PROTO __attribute__((pure)) ptrdiff_t
-mp_check_array(const char *cur, const char *end);
+JS_PROTO __attribute__((pure)) ptrdiff_t
+js_check_array(const char *cur, const char *end);
 
 /**
- * \brief Decode an array header from MsgPack \a data.
+ * \brief Decode an array header from JSONPack \a data.
  *
  * All array members must be decoded after the header.
  * \param data - the pointer to a buffer
  * \return the number of elements in an array
- * \post *data = *data + mp_sizeof_array(retval)
- * \sa \link mp_encode_array() An usage example \endlink
+ * \post *data = *data + js_sizeof_array(retval)
+ * \sa \link js_encode_array() An usage example \endlink
  */
-MP_PROTO uint32_t
-mp_decode_array(const char **data);
+JS_PROTO uint32_t
+js_decode_array(const char **data);
 
 /**
  * \brief Calculate exact buffer size needed to store a map header of
@@ -442,8 +442,8 @@ mp_decode_array(const char **data);
  * \param size - a number of elements
  * \return buffer size in bytes (max is 5)
  */
-MP_PROTO __attribute__((const)) uint32_t
-mp_sizeof_map(uint32_t size);
+JS_PROTO __attribute__((const)) uint32_t
+js_sizeof_map(uint32_t size);
 
 /**
  * \brief Encode a map header of \a size elements.
@@ -456,31 +456,31 @@ mp_sizeof_map(uint32_t size);
  *
  * // Encode
  * char *w = buf;
- * w = mp_encode_map(b, 2);
- * w = mp_encode_str(b, "key1", 4);
- * w = mp_encode_str(b, "value1", 6);
- * w = mp_encode_str(b, "key2", 4);
- * w = mp_encode_str(b, "value2", 6);
+ * w = js_encode_map(b, 2);
+ * w = js_encode_str(b, "key1", 4);
+ * w = js_encode_str(b, "value1", 6);
+ * w = js_encode_str(b, "key2", 4);
+ * w = js_encode_str(b, "value2", 6);
  *
  * // Decode
  * const char *r = buf;
- * uint32_t size = mp_decode_map(&r);
+ * uint32_t size = js_decode_map(&r);
  * for (uint32_t i = 0; i < size; i++) {
- *      // Use switch(mp_typeof(**r)) to support more types
+ *      // Use switch(js_typeof(**r)) to support more types
  *     uint32_t key_len, val_len;
- *     const char *key = mp_decode_str(&r, key_len);
- *     const char *val = mp_decode_str(&r, val_len);
+ *     const char *key = js_decode_str(&r, key_len);
+ *     const char *val = js_decode_str(&r, val_len);
  * }
  * assert (r == w);
  * \endcode
  * It is your responsibility to ensure that \a data has enough space.
  * \param data - a buffer
  * \param size - a number of key/value pairs
- * \return \a data + \link mp_sizeof_map() mp_sizeof_map(size)\endlink
- * \sa mp_sizeof_map
+ * \return \a data + \link js_sizeof_map() js_sizeof_map(size)\endlink
+ * \sa js_sizeof_map
  */
-MP_PROTO char *
-mp_encode_map(char *data, uint32_t size);
+JS_PROTO char *
+js_encode_map(char *data, uint32_t size);
 
 /**
  * \brief Check that \a cur buffer has enough bytes to decode a map header
@@ -489,22 +489,22 @@ mp_encode_map(char *data, uint32_t size);
  * \retval 0 - buffer has enough bytes
  * \retval > 0 - the number of remaining bytes to read
  * \pre cur < end
- * \pre mp_typeof(*cur) == MP_MAP
+ * \pre js_typeof(*cur) == JS_MAP
  */
-MP_PROTO __attribute__((pure)) ptrdiff_t
-mp_check_map(const char *cur, const char *end);
+JS_PROTO __attribute__((pure)) ptrdiff_t
+js_check_map(const char *cur, const char *end);
 
 /**
- * \brief Decode a map header from MsgPack \a data.
+ * \brief Decode a map header from JSONPack \a data.
  *
  * All map key-value pairs must be decoded after the header.
  * \param data - the pointer to a buffer
  * \return the number of key/value pairs in a map
- * \post *data = *data + mp_sizeof_array(retval)
- * \sa \link mp_encode_map() An usage example \endlink
+ * \post *data = *data + js_sizeof_array(retval)
+ * \sa \link js_encode_map() An usage example \endlink
  */
-MP_PROTO uint32_t
-mp_decode_map(const char **data);
+JS_PROTO uint32_t
+js_decode_map(const char **data);
 
 /**
  * \brief Calculate exact buffer size needed to store an integer \a num.
@@ -514,15 +514,15 @@ mp_decode_map(const char **data);
  * \code
  * char **data = ...;
  * char *end = *data;
- * my_buffer_ensure(mp_sizeof_uint(x), &end);
+ * my_buffer_ensure(js_sizeof_uint(x), &end);
  * // my_buffer_ensure(9, &end);
- * mp_encode_uint(buffer, x);
+ * js_encode_uint(buffer, x);
  * \endcode
  * \param num - a number
  * \return buffer size in bytes (max is 9)
  */
-MP_PROTO __attribute__((const)) uint32_t
-mp_sizeof_uint(uint64_t num);
+JS_PROTO __attribute__((const)) uint32_t
+js_sizeof_uint(uint64_t num);
 
 /**
  * \brief Calculate exact buffer size needed to store an integer \a num.
@@ -532,33 +532,33 @@ mp_sizeof_uint(uint64_t num);
  * \return buffer size in bytes (max is 9)
  * \pre \a num < 0
  */
-MP_PROTO __attribute__((const)) uint32_t
-mp_sizeof_int(int64_t num);
+JS_PROTO __attribute__((const)) uint32_t
+js_sizeof_int(int64_t num);
 
 /**
  * \brief Encode an unsigned integer \a num.
  * It is your responsibility to ensure that \a data has enough space.
  * \param data - a buffer
  * \param num - a number
- * \return \a data + mp_sizeof_uint(\a num)
- * \sa \link mp_encode_array() An usage example \endlink
- * \sa mp_sizeof_uint()
+ * \return \a data + js_sizeof_uint(\a num)
+ * \sa \link js_encode_array() An usage example \endlink
+ * \sa js_sizeof_uint()
  */
-MP_PROTO char *
-mp_encode_uint(char *data, uint64_t num);
+JS_PROTO char *
+js_encode_uint(char *data, uint64_t num);
 
 /**
  * \brief Encode a signed integer \a num.
  * It is your responsibility to ensure that \a data has enough space.
  * \param data - a buffer
  * \param num - a number
- * \return \a data + mp_sizeof_int(\a num)
- * \sa \link mp_encode_array() An usage example \endlink
- * \sa mp_sizeof_int()
+ * \return \a data + js_sizeof_int(\a num)
+ * \sa \link js_encode_array() An usage example \endlink
+ * \sa js_sizeof_int()
  * \pre \a num < 0
  */
-MP_PROTO char *
-mp_encode_int(char *data, int64_t num);
+JS_PROTO char *
+js_encode_int(char *data, int64_t num);
 
 /**
  * \brief Check that \a cur buffer has enough bytes to decode an uint
@@ -567,10 +567,10 @@ mp_encode_int(char *data, int64_t num);
  * \retval 0 - buffer has enough bytes
  * \retval > 0 - the number of remaining bytes to read
  * \pre cur < end
- * \pre mp_typeof(*cur) == MP_UINT
+ * \pre js_typeof(*cur) == JS_UINT
  */
-MP_PROTO __attribute__((pure)) ptrdiff_t
-mp_check_uint(const char *cur, const char *end);
+JS_PROTO __attribute__((pure)) ptrdiff_t
+js_check_uint(const char *cur, const char *end);
 
 /**
  * \brief Check that \a cur buffer has enough bytes to decode an int
@@ -579,41 +579,41 @@ mp_check_uint(const char *cur, const char *end);
  * \retval 0 - buffer has enough bytes
  * \retval > 0 - the number of remaining bytes to read
  * \pre cur < end
- * \pre mp_typeof(*cur) == MP_INT
+ * \pre js_typeof(*cur) == JS_INT
  */
-MP_PROTO __attribute__((pure)) ptrdiff_t
-mp_check_int(const char *cur, const char *end);
+JS_PROTO __attribute__((pure)) ptrdiff_t
+js_check_int(const char *cur, const char *end);
 
 /**
- * \brief Decode an unsigned integer from MsgPack \a data
+ * \brief Decode an unsigned integer from JSONPack \a data
  * \param data - the pointer to a buffer
  * \return an unsigned number
- * \post *data = *data + mp_sizeof_uint(retval)
+ * \post *data = *data + js_sizeof_uint(retval)
  */
-MP_PROTO uint64_t
-mp_decode_uint(const char **data);
+JS_PROTO uint64_t
+js_decode_uint(const char **data);
 
 /**
- * \brief Decode a signed integer from MsgPack \a data
+ * \brief Decode a signed integer from JSONPack \a data
  * \param data - the pointer to a buffer
  * \return an unsigned number
- * \post *data = *data + mp_sizeof_int(retval)
+ * \post *data = *data + js_sizeof_int(retval)
  */
-MP_PROTO int64_t
-mp_decode_int(const char **data);
+JS_PROTO int64_t
+js_decode_int(const char **data);
 
 /**
  * \brief Compare two packed unsigned integers.
  *
- * The function is faster than two mp_decode_uint() calls.
+ * The function is faster than two js_decode_uint() calls.
  * \param data_a unsigned int a
  * \param data_b unsigned int b
  * \retval < 0 when \a a < \a b
  * \retval   0 when \a a == \a b
  * \retval > 0 when \a a > \a b
  */
-MP_PROTO __attribute__((pure)) int
-mp_compare_uint(const char *data_a, const char *data_b);
+JS_PROTO __attribute__((pure)) int
+js_compare_uint(const char *data_a, const char *data_b);
 
 /**
  * \brief Calculate exact buffer size needed to store a float \a num.
@@ -622,8 +622,8 @@ mp_compare_uint(const char *data_a, const char *data_b);
  * \param num - a float
  * \return buffer size in bytes (always 5)
  */
-MP_PROTO __attribute__((const)) uint32_t
-mp_sizeof_float(float num);
+JS_PROTO __attribute__((const)) uint32_t
+js_sizeof_float(float num);
 
 /**
  * \brief Calculate exact buffer size needed to store a double \a num.
@@ -633,32 +633,32 @@ mp_sizeof_float(float num);
  * \param num - a double
  * \return buffer size in bytes (5 or 9)
  */
-MP_PROTO __attribute__((const)) uint32_t
-mp_sizeof_double(double num);
+JS_PROTO __attribute__((const)) uint32_t
+js_sizeof_double(double num);
 
 /**
  * \brief Encode a float \a num.
  * It is your responsibility to ensure that \a data has enough space.
  * \param data - a buffer
  * \param num - a float
- * \return \a data + mp_sizeof_float(\a num)
- * \sa mp_sizeof_float()
- * \sa \link mp_encode_array() An usage example \endlink
+ * \return \a data + js_sizeof_float(\a num)
+ * \sa js_sizeof_float()
+ * \sa \link js_encode_array() An usage example \endlink
  */
-MP_PROTO char *
-mp_encode_float(char *data, float num);
+JS_PROTO char *
+js_encode_float(char *data, float num);
 
 /**
  * \brief Encode a double \a num.
  * It is your responsibility to ensure that \a data has enough space.
  * \param data - a buffer
  * \param num - a float
- * \return \a data + mp_sizeof_double(\a num)
- * \sa \link mp_encode_array() An usage example \endlink
- * \sa mp_sizeof_double()
+ * \return \a data + js_sizeof_double(\a num)
+ * \sa \link js_encode_array() An usage example \endlink
+ * \sa js_sizeof_double()
  */
-MP_PROTO char *
-mp_encode_double(char *data, double num);
+JS_PROTO char *
+js_encode_double(char *data, double num);
 
 /**
  * \brief Check that \a cur buffer has enough bytes to decode a float
@@ -667,10 +667,10 @@ mp_encode_double(char *data, double num);
  * \retval 0 - buffer has enough bytes
  * \retval > 0 - the number of remaining bytes to read
  * \pre cur < end
- * \pre mp_typeof(*cur) == MP_FLOAT
+ * \pre js_typeof(*cur) == JS_FLOAT
  */
-MP_PROTO __attribute__((pure)) ptrdiff_t
-mp_check_float(const char *cur, const char *end);
+JS_PROTO __attribute__((pure)) ptrdiff_t
+js_check_float(const char *cur, const char *end);
 
 /**
  * \brief Check that \a cur buffer has enough bytes to decode a double
@@ -679,28 +679,28 @@ mp_check_float(const char *cur, const char *end);
  * \retval 0 - buffer has enough bytes
  * \retval > 0 - the number of remaining bytes to read
  * \pre cur < end
- * \pre mp_typeof(*cur) == MP_DOUBLE
+ * \pre js_typeof(*cur) == JS_DOUBLE
  */
-MP_PROTO __attribute__((pure)) ptrdiff_t
-mp_check_double(const char *cur, const char *end);
+JS_PROTO __attribute__((pure)) ptrdiff_t
+js_check_double(const char *cur, const char *end);
 
 /**
- * \brief Decode a float from MsgPack \a data
+ * \brief Decode a float from JSONPack \a data
  * \param data - the pointer to a buffer
  * \return a float
- * \post *data = *data + mp_sizeof_float(retval)
+ * \post *data = *data + js_sizeof_float(retval)
  */
-MP_PROTO float
-mp_decode_float(const char **data);
+JS_PROTO float
+js_decode_float(const char **data);
 
 /**
- * \brief Decode a double from MsgPack \a data
+ * \brief Decode a double from JSONPack \a data
  * \param data - the pointer to a buffer
  * \return a double
- * \post *data = *data + mp_sizeof_double(retval)
+ * \post *data = *data + js_sizeof_double(retval)
  */
-MP_PROTO double
-mp_decode_double(const char **data);
+JS_PROTO double
+js_decode_double(const char **data);
 
 /**
  * \brief Calculate exact buffer size needed to store a string header of
@@ -709,16 +709,16 @@ mp_decode_double(const char **data);
  * \param len - a string length
  * \return size in chars (max is 5)
  */
-MP_PROTO __attribute__((const)) uint32_t
-mp_sizeof_strl(uint32_t len);
+JS_PROTO __attribute__((const)) uint32_t
+js_sizeof_strl(uint32_t len);
 
 /**
- * \brief Equivalent to mp_sizeof_strl(\a len) + \a len.
+ * \brief Equivalent to js_sizeof_strl(\a len) + \a len.
  * \param len - a string length
  * \return size in chars (max is 5 + \a len)
  */
-MP_PROTO __attribute__((const)) uint32_t
-mp_sizeof_str(uint32_t len);
+JS_PROTO __attribute__((const)) uint32_t
+js_sizeof_str(uint32_t len);
 
 /**
  * \brief Calculate exact buffer size needed to store a binstring header of
@@ -727,21 +727,21 @@ mp_sizeof_str(uint32_t len);
  * \param len - a string length
  * \return size in chars (max is 5)
  */
-MP_PROTO __attribute__((const)) uint32_t
-mp_sizeof_binl(uint32_t len);
+JS_PROTO __attribute__((const)) uint32_t
+js_sizeof_binl(uint32_t len);
 
 /**
- * \brief Equivalent to mp_sizeof_binl(\a len) + \a len.
+ * \brief Equivalent to js_sizeof_binl(\a len) + \a len.
  * \param len - a string length
  * \return size in chars (max is 5 + \a len)
  */
-MP_PROTO __attribute__((const)) uint32_t
-mp_sizeof_bin(uint32_t len);
+JS_PROTO __attribute__((const)) uint32_t
+js_sizeof_bin(uint32_t len);
 
 /**
  * \brief Encode a string header of length \a len.
  *
- * The function encodes MsgPack header (\em only header) for a string of
+ * The function encodes JSONPack header (\em only header) for a string of
  * length \a len. You should append actual string data to the buffer manually
  * after encoding the header (exactly \a len bytes without trailing '\0').
  *
@@ -754,7 +754,7 @@ mp_sizeof_bin(uint32_t len);
  * \code
  * char buffer[1024];
  * char *b = buffer;
- * b = mp_encode_strl(b, hdr.total_len);
+ * b = js_encode_strl(b, hdr.total_len);
  * char *s = b;
  * memcpy(b, pkt1.data, pkt1.len)
  * b += pkt1.len;
@@ -771,59 +771,59 @@ mp_sizeof_bin(uint32_t len);
  * Hint: you can dynamically reallocate the buffer during the process.
  * \param data - a buffer
  * \param len - a string length
- * \return \a data + mp_sizeof_strl(len)
- * \sa mp_sizeof_strl()
+ * \return \a data + js_sizeof_strl(len)
+ * \sa js_sizeof_strl()
  */
-MP_PROTO char *
-mp_encode_strl(char *data, uint32_t len);
+JS_PROTO char *
+js_encode_strl(char *data, uint32_t len);
 
 /**
  * \brief Encode a string of length \a len.
- * The function is equivalent to mp_encode_strl() + memcpy.
+ * The function is equivalent to js_encode_strl() + memcpy.
  * \param data - a buffer
  * \param str - a pointer to string data
  * \param len - a string length
- * \return \a data + mp_sizeof_str(len) ==
- * data + mp_sizeof_strl(len) + len
- * \sa mp_encode_strl
+ * \return \a data + js_sizeof_str(len) ==
+ * data + js_sizeof_strl(len) + len
+ * \sa js_encode_strl
  */
-MP_PROTO char *
-mp_encode_str(char *data, const char *str, uint32_t len);
+JS_PROTO char *
+js_encode_str(char *data, const char *str, uint32_t len);
 
 /**
  * \brief Encode a binstring header of length \a len.
- * See mp_encode_strl() for more details.
+ * See js_encode_strl() for more details.
  * \param data - a bufer
  * \param len - a string length
- * \return data + mp_sizeof_binl(\a len)
- * \sa mp_encode_strl
+ * \return data + js_sizeof_binl(\a len)
+ * \sa js_encode_strl
  */
-MP_PROTO char *
-mp_encode_binl(char *data, uint32_t len);
+JS_PROTO char *
+js_encode_binl(char *data, uint32_t len);
 
 /**
  * \brief Encode a binstring of length \a len.
- * The function is equivalent to mp_encode_binl() + memcpy.
+ * The function is equivalent to js_encode_binl() + memcpy.
  * \param data - a buffer
  * \param str - a pointer to binstring data
  * \param len - a binstring length
- * \return \a data + mp_sizeof_bin(\a len) ==
- * data + mp_sizeof_binl(\a len) + \a len
- * \sa mp_encode_strl
+ * \return \a data + js_sizeof_bin(\a len) ==
+ * data + js_sizeof_binl(\a len) + \a len
+ * \sa js_encode_strl
  */
-MP_PROTO char *
-mp_encode_bin(char *data, const char *str, uint32_t len);
+JS_PROTO char *
+js_encode_bin(char *data, const char *str, uint32_t len);
 
 /**
  * \brief Encode a sequence of values according to format string.
- * Example: mp_format(buf, sz, "[%d {%d%s%d%s}]", 42, 0, "false", 1, "true");
- * to get a msgpack array of two items: number 42 and map (0->"false, 2->"true")
+ * Example: js_format(buf, sz, "[%d {%d%s%d%s}]", 42, 0, "false", 1, "true");
+ * to get a jsonpack array of two items: number 42 and map (0->"false, 2->"true")
  * Does not write items that don't fit to data_size argument.
  *
  * \param data - a buffer
  * \param data_size - a buffer size
  * \param format - zero-end string, containing structure of resulting
- * msgpack and types of next arguments.
+ * jsonpack and types of next arguments.
  * Format can contain '[' and ']' pairs, defining arrays,
  * '{' and '}' pairs, defining maps, and format specifiers, described below:
  * %d, %i - int
@@ -848,33 +848,33 @@ mp_encode_bin(char *data, const char *str, uint32_t len);
  *
  * \return the number of requred bytes.
  * \retval > data_size means that is not enough space
- * and whole msgpack was not encoded.
+ * and whole jsonpack was not encoded.
  */
-MP_PROTO size_t
-mp_format(char *data, size_t data_size, const char *format, ...);
+JS_PROTO size_t
+js_format(char *data, size_t data_size, const char *format, ...);
 
 /**
- * \brief mp_format variation, taking variable argument list
+ * \brief js_format variation, taking variable argument list
  * Example:
  *  va_list args;
  *  va_start(args, fmt);
- *  mp_vformat(data, data_size, fmt, args);
+ *  js_vformat(data, data_size, fmt, args);
  *  va_end(args);
- * \sa \link mp_format() mp_format() \endlink
+ * \sa \link js_format() js_format() \endlink
  */
-MP_PROTO size_t
-mp_vformat(char *data, size_t data_size, const char *format, va_list args);
+JS_PROTO size_t
+js_vformat(char *data, size_t data_size, const char *format, va_list args);
 
 /**
- * \brief print to \a file msgpacked data in JSON format.
- * MP_EXT is printed as "EXT" only
+ * \brief print to \a file jsonpacked data in JSON format.
+ * JS_EXT is printed as "EXT" only
  * \param file - pointer to file (or NULL for stdout)
- * \param data - pointer to buffer containing msgpack object
+ * \param data - pointer to buffer containing jsonpack object
  * \retval 0 - success
- * \retval -1 - wrong msgpack
+ * \retval -1 - wrong jsonpack
  */
-MP_PROTO int
-mp_fprint(FILE* file, const char *data);
+JS_PROTO int
+js_fprint(FILE* file, const char *data);
 
 /**
  * \brief Check that \a cur buffer has enough bytes to decode a string header
@@ -883,10 +883,10 @@ mp_fprint(FILE* file, const char *data);
  * \retval 0 - buffer has enough bytes
  * \retval > 0 - the number of remaining bytes to read
  * \pre cur < end
- * \pre mp_typeof(*cur) == MP_STR
+ * \pre js_typeof(*cur) == JS_STR
  */
-MP_PROTO __attribute__((pure)) ptrdiff_t
-mp_check_strl(const char *cur, const char *end);
+JS_PROTO __attribute__((pure)) ptrdiff_t
+js_check_strl(const char *cur, const char *end);
 
 /**
  * \brief Check that \a cur buffer has enough bytes to decode a binstring header
@@ -895,73 +895,73 @@ mp_check_strl(const char *cur, const char *end);
  * \retval 0 - buffer has enough bytes
  * \retval > 0 - the number of remaining bytes to read
  * \pre cur < end
- * \pre mp_typeof(*cur) == MP_BIN
+ * \pre js_typeof(*cur) == JS_BIN
  */
-MP_PROTO __attribute__((pure)) ptrdiff_t
-mp_check_binl(const char *cur, const char *end);
+JS_PROTO __attribute__((pure)) ptrdiff_t
+js_check_binl(const char *cur, const char *end);
 
 /**
- * \brief Decode a length of a string from MsgPack \a data
+ * \brief Decode a length of a string from JSONPack \a data
  * \param data - the pointer to a buffer
  * \return a length of astring
- * \post *data = *data + mp_sizeof_strl(retval)
- * \sa mp_encode_strl
+ * \post *data = *data + js_sizeof_strl(retval)
+ * \sa js_encode_strl
  */
-MP_PROTO uint32_t
-mp_decode_strl(const char **data);
+JS_PROTO uint32_t
+js_decode_strl(const char **data);
 
 /**
- * \brief Decode a string from MsgPack \a data
+ * \brief Decode a string from JSONPack \a data
  * \param data - the pointer to a buffer
  * \param len - the pointer to save a string length
  * \return a pointer to a decoded string
- * \post *data = *data + mp_sizeof_str(*len)
- * \sa mp_encode_binl
+ * \post *data = *data + js_sizeof_str(*len)
+ * \sa js_encode_binl
  */
-MP_PROTO const char *
-mp_decode_str(const char **data, uint32_t *len);
+JS_PROTO const char *
+js_decode_str(const char **data, uint32_t *len);
 
 /**
- * \brief Decode a length of a binstring from MsgPack \a data
+ * \brief Decode a length of a binstring from JSONPack \a data
  * \param data - the pointer to a buffer
  * \return a length of a binstring
- * \post *data = *data + mp_sizeof_binl(retval)
- * \sa mp_encode_binl
+ * \post *data = *data + js_sizeof_binl(retval)
+ * \sa js_encode_binl
  */
-MP_PROTO uint32_t
-mp_decode_binl(const char **data);
+JS_PROTO uint32_t
+js_decode_binl(const char **data);
 
 /**
- * \brief Decode a binstring from MsgPack \a data
+ * \brief Decode a binstring from JSONPack \a data
  * \param data - the pointer to a buffer
  * \param len - the pointer to save a binstring length
  * \return a pointer to a decoded binstring
- * \post *data = *data + mp_sizeof_str(*len)
- * \sa mp_encode_binl
+ * \post *data = *data + js_sizeof_str(*len)
+ * \sa js_encode_binl
  */
-MP_PROTO const char *
-mp_decode_bin(const char **data, uint32_t *len);
+JS_PROTO const char *
+js_decode_bin(const char **data, uint32_t *len);
 
 /**
- * \brief Decode a length of a string or binstring from MsgPack \a data
+ * \brief Decode a length of a string or binstring from JSONPack \a data
  * \param data - the pointer to a buffer
  * \return a length of a string
- * \post *data = *data + mp_sizeof_strbinl(retval)
- * \sa mp_encode_binl
+ * \post *data = *data + js_sizeof_strbinl(retval)
+ * \sa js_encode_binl
  */
-MP_PROTO uint32_t
-mp_decode_strbinl(const char **data);
+JS_PROTO uint32_t
+js_decode_strbinl(const char **data);
 
 /**
- * \brief Decode a string or binstring from MsgPack \a data
+ * \brief Decode a string or binstring from JSONPack \a data
  * \param data - the pointer to a buffer
  * \param len - the pointer to save a binstring length
  * \return a pointer to a decoded binstring
- * \post *data = *data + mp_sizeof_strbinl(*len)
- * \sa mp_encode_binl
+ * \post *data = *data + js_sizeof_strbinl(*len)
+ * \sa js_encode_binl
  */
-MP_PROTO const char *
-mp_decode_strbin(const char **data, uint32_t *len);
+JS_PROTO const char *
+js_decode_strbin(const char **data, uint32_t *len);
 
 /**
  * \brief Calculate exact buffer size needed to store the nil value.
@@ -969,19 +969,19 @@ mp_decode_strbin(const char **data, uint32_t *len);
  * the library.
  * \return buffer size in bytes (always 1)
  */
-MP_PROTO __attribute__((const)) uint32_t
-mp_sizeof_nil(void);
+JS_PROTO __attribute__((const)) uint32_t
+js_sizeof_nil(void);
 
 /**
  * \brief Encode the nil value.
  * It is your responsibility to ensure that \a data has enough space.
  * \param data - a buffer
- * \return \a data + mp_sizeof_nil()
- * \sa \link mp_encode_array() An usage example \endlink
- * \sa mp_sizeof_nil()
+ * \return \a data + js_sizeof_nil()
+ * \sa \link js_encode_array() An usage example \endlink
+ * \sa js_sizeof_nil()
  */
-MP_PROTO char *
-mp_encode_nil(char *data);
+JS_PROTO char *
+js_encode_nil(char *data);
 
 /**
  * \brief Check that \a cur buffer has enough bytes to decode nil
@@ -990,18 +990,18 @@ mp_encode_nil(char *data);
  * \retval 0 - buffer has enough bytes
  * \retval > 0 - the number of remaining bytes to read
  * \pre cur < end
- * \pre mp_typeof(*cur) == MP_NIL
+ * \pre js_typeof(*cur) == JS_NIL
  */
-MP_PROTO __attribute__((pure)) ptrdiff_t
-mp_check_nil(const char *cur, const char *end);
+JS_PROTO __attribute__((pure)) ptrdiff_t
+js_check_nil(const char *cur, const char *end);
 
 /**
- * \brief Decode the nil value from MsgPack \a data
+ * \brief Decode the nil value from JSONPack \a data
  * \param data - the pointer to a buffer
- * \post *data = *data + mp_sizeof_nil()
+ * \post *data = *data + js_sizeof_nil()
  */
-MP_PROTO void
-mp_decode_nil(const char **data);
+JS_PROTO void
+js_decode_nil(const char **data);
 
 /**
  * \brief Calculate exact buffer size needed to store a boolean value.
@@ -1009,20 +1009,20 @@ mp_decode_nil(const char **data);
  * the library.
  * \return buffer size in bytes (always 1)
  */
-MP_PROTO __attribute__((const)) uint32_t
-mp_sizeof_bool(bool val);
+JS_PROTO __attribute__((const)) uint32_t
+js_sizeof_bool(bool val);
 
 /**
  * \brief Encode a bool value \a val.
  * It is your responsibility to ensure that \a data has enough space.
  * \param data - a buffer
  * \param val - a bool
- * \return \a data + mp_sizeof_bool(val)
- * \sa \link mp_encode_array() An usage example \endlink
- * \sa mp_sizeof_bool()
+ * \return \a data + js_sizeof_bool(val)
+ * \sa \link js_encode_array() An usage example \endlink
+ * \sa js_sizeof_bool()
  */
-MP_PROTO char *
-mp_encode_bool(char *data, bool val);
+JS_PROTO char *
+js_encode_bool(char *data, bool val);
 
 /**
  * \brief Check that \a cur buffer has enough bytes to decode a bool value
@@ -1031,24 +1031,24 @@ mp_encode_bool(char *data, bool val);
  * \retval 0 - buffer has enough bytes
  * \retval > 0 - the number of remaining bytes to read
  * \pre cur < end
- * \pre mp_typeof(*cur) == MP_BOOL
+ * \pre js_typeof(*cur) == JS_BOOL
  */
-MP_PROTO __attribute__((pure)) ptrdiff_t
-mp_check_bool(const char *cur, const char *end);
+JS_PROTO __attribute__((pure)) ptrdiff_t
+js_check_bool(const char *cur, const char *end);
 
 /**
- * \brief Decode a bool value from MsgPack \a data
+ * \brief Decode a bool value from JSONPack \a data
  * \param data - the pointer to a buffer
  * \return a decoded bool value
- * \post *data = *data + mp_sizeof_bool(retval)
+ * \post *data = *data + js_sizeof_bool(retval)
  */
-MP_PROTO bool
-mp_decode_bool(const char **data);
+JS_PROTO bool
+js_decode_bool(const char **data);
 
 /**
  * \brief Skip one element in a packed \a data.
  *
- * The function is faster than mp_typeof + mp_decode_XXX() combination.
+ * The function is faster than js_typeof + js_decode_XXX() combination.
  * For arrays and maps the function also skips all members.
  * For strings and binstrings the function also skips the string data.
  *
@@ -1057,67 +1057,67 @@ mp_decode_bool(const char **data);
  * char buf[1024];
  *
  * char *w = buf;
- * // First MsgPack object
- * w = mp_encode_uint(w, 10);
+ * // First JSONPack object
+ * w = js_encode_uint(w, 10);
  *
- * // Second MsgPack object
- * w = mp_encode_array(w, 4);
- *    w = mp_encode_array(w, 2);
+ * // Second JSONPack object
+ * w = js_encode_array(w, 4);
+ *    w = js_encode_array(w, 2);
  *         // Begin of an inner array
- *         w = mp_encode_str(w, "second inner 1", 14);
- *         w = mp_encode_str(w, "second inner 2", 14);
+ *         w = js_encode_str(w, "second inner 1", 14);
+ *         w = js_encode_str(w, "second inner 2", 14);
  *         // End of an inner array
- *    w = mp_encode_str(w, "second", 6);
- *    w = mp_encode_uint(w, 20);
- *    w = mp_encode_bool(w, true);
+ *    w = js_encode_str(w, "second", 6);
+ *    w = js_encode_uint(w, 20);
+ *    w = js_encode_bool(w, true);
  *
- * // Third MsgPack object
- * w = mp_encode_str(w, "third", 5);
+ * // Third JSONPack object
+ * w = js_encode_str(w, "third", 5);
  * // EOF
  *
  * const char *r = buf;
  *
- * // First MsgPack object
- * assert(mp_typeof(**r) == MP_UINT);
- * mp_next(&r); // skip the first object
+ * // First JSONPack object
+ * assert(js_typeof(**r) == JS_UINT);
+ * js_next(&r); // skip the first object
  *
- * // Second MsgPack object
- * assert(mp_typeof(**r) == MP_ARRAY);
- * mp_decode_array(&r);
- *     assert(mp_typeof(**r) == MP_ARRAY); // inner array
- *     mp_next(&r); // -->> skip the entire inner array (with all members)
- *     assert(mp_typeof(**r) == MP_STR); // second
- *     mp_next(&r);
- *     assert(mp_typeof(**r) == MP_UINT); // 20
- *     mp_next(&r);
- *     assert(mp_typeof(**r) == MP_BOOL); // true
- *     mp_next(&r);
+ * // Second JSONPack object
+ * assert(js_typeof(**r) == JS_ARRAY);
+ * js_decode_array(&r);
+ *     assert(js_typeof(**r) == JS_ARRAY); // inner array
+ *     js_next(&r); // -->> skip the entire inner array (with all members)
+ *     assert(js_typeof(**r) == JS_STR); // second
+ *     js_next(&r);
+ *     assert(js_typeof(**r) == JS_UINT); // 20
+ *     js_next(&r);
+ *     assert(js_typeof(**r) == JS_BOOL); // true
+ *     js_next(&r);
  *
- * // Third MsgPack object
- * assert(mp_typeof(**r) == MP_STR); // third
- * mp_next(&r);
+ * // Third JSONPack object
+ * assert(js_typeof(**r) == JS_STR); // third
+ * js_next(&r);
  *
  * assert(r == w); // EOF
  *
  * \endcode
  * \param data - the pointer to a buffer
- * \post *data = *data + mp_sizeof_TYPE() where TYPE is mp_typeof(**data)
+ * \post *data = *data + js_sizeof_TYPE() where TYPE is js_typeof(**data)
  */
-MP_PROTO void
-mp_next(const char **data);
+JS_PROTO void
+js_next(const char **data);
 
 /**
- * \brief Equivalent to mp_next() but also validates MsgPack in \a data.
+ * \brief Equivalent to js_next() but also validates JSONPack in \a data.
  * \param data - the pointer to a buffer
  * \param end - the end of a buffer
- * \retval 0 when MsgPack in \a data is valid.
- * \retval != 0 when MsgPack in \a data is not valid.
- * \post *data = *data + mp_sizeof_TYPE() where TYPE is mp_typeof(**data)
- * \post *data is not defined if MsgPack is not valid
- * \sa mp_next()
+ * \retval 0 when JSONPack in \a data is valid.
+ * \retval != 0 when JSONPack in \a data is not valid.
+ * \post *data = *data + js_sizeof_TYPE() where TYPE is js_typeof(**data)
+ * \post *data is not defined if JSONPack is not valid
+ * \sa js_next()
  */
-MP_PROTO int
-mp_check(const char **data, const char *end);
+JS_PROTO int
+js_check(const char **data, const char *end);
 
 /*
  * }}}
@@ -1128,18 +1128,18 @@ mp_check(const char **data, const char *end);
  */
 
 /** \cond false */
-extern const enum mp_type mp_type_hint[];
-extern const int8_t mp_parser_hint[];
-extern const char *mp_char2escape[];
+extern const enum js_type js_type_hint[];
+extern const int8_t js_parser_hint[];
+extern const char *js_char2escape[];
 
-MP_IMPL MP_ALWAYSINLINE enum mp_type
-mp_typeof(const char c)
+JS_IMPL JS_ALWAYSINLINE enum js_type
+js_typeof(const char c)
 {
-	return mp_type_hint[(uint8_t) c];
+	return js_type_hint[(uint8_t) c];
 }
 
-MP_IMPL uint32_t
-mp_sizeof_array(uint32_t size)
+JS_IMPL uint32_t
+js_sizeof_array(uint32_t size)
 {
 	if (size <= 15) {
 		return 1;
@@ -1150,67 +1150,67 @@ mp_sizeof_array(uint32_t size)
 	}
 }
 
-MP_IMPL char *
-mp_encode_array(char *data, uint32_t size)
+JS_IMPL char *
+js_encode_array(char *data, uint32_t size)
 {
 	if (size <= 15) {
-		return mp_store_u8(data, 0x90 | size);
+		return js_store_u8(data, 0x90 | size);
 	} else if (size <= UINT16_MAX) {
-		data = mp_store_u8(data, 0xdc);
-		data = mp_store_u16(data, size);
+		data = js_store_u8(data, 0xdc);
+		data = js_store_u16(data, size);
 		return data;
 	} else {
-		data = mp_store_u8(data, 0xdd);
-		return mp_store_u32(data, size);
+		data = js_store_u8(data, 0xdd);
+		return js_store_u32(data, size);
 	}
 }
 
-MP_IMPL ptrdiff_t
-mp_check_array(const char *cur, const char *end)
+JS_IMPL ptrdiff_t
+js_check_array(const char *cur, const char *end)
 {
 	assert(cur < end);
-	assert(mp_typeof(*cur) == MP_ARRAY);
-	uint8_t c = mp_load_u8(&cur);
-	if (mp_likely(!(c & 0x40)))
+	assert(js_typeof(*cur) == JS_ARRAY);
+	uint8_t c = js_load_u8(&cur);
+	if (js_likely(!(c & 0x40)))
 		return cur - end;
 
-	assert(c >= 0xdc && c <= 0xdd); /* must be checked above by mp_typeof */
+	assert(c >= 0xdc && c <= 0xdd); /* must be checked above by js_typeof */
 	uint32_t hsize = 2U << (c & 0x1); /* 0xdc->2, 0xdd->4 */
 	return hsize - (end - cur);
 }
 
-MP_PROTO uint32_t
-mp_decode_array_slowpath(uint8_t c, const char **data);
+JS_PROTO uint32_t
+js_decode_array_slowpath(uint8_t c, const char **data);
 
-MP_IMPL uint32_t
-mp_decode_array_slowpath(uint8_t c, const char **data)
+JS_IMPL uint32_t
+js_decode_array_slowpath(uint8_t c, const char **data)
 {
 	uint32_t size;
 	switch (c & 0x1) {
 	case 0xdc & 0x1:
-		size = mp_load_u16(data);
+		size = js_load_u16(data);
 		return size;
 	case 0xdd & 0x1:
-		size = mp_load_u32(data);
+		size = js_load_u32(data);
 		return size;
 	default:
-		mp_unreachable();
+		js_unreachable();
 	}
 }
 
-MP_IMPL MP_ALWAYSINLINE uint32_t
-mp_decode_array(const char **data)
+JS_IMPL JS_ALWAYSINLINE uint32_t
+js_decode_array(const char **data)
 {
-	uint8_t c = mp_load_u8(data);
+	uint8_t c = js_load_u8(data);
 
-	if (mp_likely(!(c & 0x40)))
+	if (js_likely(!(c & 0x40)))
 		return (c & 0xf);
 
-	return mp_decode_array_slowpath(c, data);
+	return js_decode_array_slowpath(c, data);
 }
 
-MP_IMPL uint32_t
-mp_sizeof_map(uint32_t size)
+JS_IMPL uint32_t
+js_sizeof_map(uint32_t size)
 {
 	if (size <= 15) {
 		return 1;
@@ -1221,54 +1221,54 @@ mp_sizeof_map(uint32_t size)
 	}
 }
 
-MP_IMPL char *
-mp_encode_map(char *data, uint32_t size)
+JS_IMPL char *
+js_encode_map(char *data, uint32_t size)
 {
 	if (size <= 15) {
-		return mp_store_u8(data, 0x80 | size);
+		return js_store_u8(data, 0x80 | size);
 	} else if (size <= UINT16_MAX) {
-		data = mp_store_u8(data, 0xde);
-		data = mp_store_u16(data, size);
+		data = js_store_u8(data, 0xde);
+		data = js_store_u16(data, size);
 		return data;
 	} else {
-		data = mp_store_u8(data, 0xdf);
-		data = mp_store_u32(data, size);
+		data = js_store_u8(data, 0xdf);
+		data = js_store_u32(data, size);
 		return data;
 	}
 }
 
-MP_IMPL ptrdiff_t
-mp_check_map(const char *cur, const char *end)
+JS_IMPL ptrdiff_t
+js_check_map(const char *cur, const char *end)
 {
 	assert(cur < end);
-	assert(mp_typeof(*cur) == MP_MAP);
-	uint8_t c = mp_load_u8(&cur);
-	if (mp_likely((c & ~0xfU) == 0x80))
+	assert(js_typeof(*cur) == JS_MAP);
+	uint8_t c = js_load_u8(&cur);
+	if (js_likely((c & ~0xfU) == 0x80))
 		return cur - end;
 
-	assert(c >= 0xde && c <= 0xdf); /* must be checked above by mp_typeof */
+	assert(c >= 0xde && c <= 0xdf); /* must be checked above by js_typeof */
 	uint32_t hsize = 2U << (c & 0x1); /* 0xde->2, 0xdf->4 */
 	return hsize - (end - cur);
 }
 
-MP_IMPL uint32_t
-mp_decode_map(const char **data)
+JS_IMPL uint32_t
+js_decode_map(const char **data)
 {
-	uint8_t c = mp_load_u8(data);
+	uint8_t c = js_load_u8(data);
 	switch (c) {
 	case 0xde:
-		return mp_load_u16(data);
+		return js_load_u16(data);
 	case 0xdf:
-		return mp_load_u32(data);
+		return js_load_u32(data);
 	default:
-		if (mp_unlikely(c < 0x80 || c > 0x8f))
-			mp_unreachable();
+		if (js_unlikely(c < 0x80 || c > 0x8f))
+			js_unreachable();
 		return c & 0xf;
 	}
 }
 
-MP_IMPL uint32_t
-mp_sizeof_uint(uint64_t num)
+JS_IMPL uint32_t
+js_sizeof_uint(uint64_t num)
 {
 	if (num <= 0x7f) {
 		return 1;
@@ -1283,8 +1283,8 @@ mp_sizeof_uint(uint64_t num)
 	}
 }
 
-MP_IMPL uint32_t
-mp_sizeof_int(int64_t num)
+JS_IMPL uint32_t
+js_sizeof_int(int64_t num)
 {
 	assert(num < 0);
 	if (num >= -0x20) {
@@ -1300,90 +1300,90 @@ mp_sizeof_int(int64_t num)
 	}
 }
 
-MP_IMPL ptrdiff_t
-mp_check_uint(const char *cur, const char *end)
+JS_IMPL ptrdiff_t
+js_check_uint(const char *cur, const char *end)
 {
 	assert(cur < end);
-	assert(mp_typeof(*cur) == MP_UINT);
-	uint8_t c = mp_load_u8(&cur);
-	return mp_parser_hint[c] - (end - cur);
+	assert(js_typeof(*cur) == JS_UINT);
+	uint8_t c = js_load_u8(&cur);
+	return js_parser_hint[c] - (end - cur);
 }
 
-MP_IMPL ptrdiff_t
-mp_check_int(const char *cur, const char *end)
+JS_IMPL ptrdiff_t
+js_check_int(const char *cur, const char *end)
 {
 	assert(cur < end);
-	assert(mp_typeof(*cur) == MP_INT);
-	uint8_t c = mp_load_u8(&cur);
-	return mp_parser_hint[c] - (end - cur);
+	assert(js_typeof(*cur) == JS_INT);
+	uint8_t c = js_load_u8(&cur);
+	return js_parser_hint[c] - (end - cur);
 }
 
-MP_IMPL char *
-mp_encode_uint(char *data, uint64_t num)
+JS_IMPL char *
+js_encode_uint(char *data, uint64_t num)
 {
 	if (num <= 0x7f) {
-		return mp_store_u8(data, num);
+		return js_store_u8(data, num);
 	} else if (num <= UINT8_MAX) {
-		data = mp_store_u8(data, 0xcc);
-		return mp_store_u8(data, num);
+		data = js_store_u8(data, 0xcc);
+		return js_store_u8(data, num);
 	} else if (num <= UINT16_MAX) {
-		data = mp_store_u8(data, 0xcd);
-		return mp_store_u16(data, num);
+		data = js_store_u8(data, 0xcd);
+		return js_store_u16(data, num);
 	} else if (num <= UINT32_MAX) {
-		data = mp_store_u8(data, 0xce);
-		return mp_store_u32(data, num);
+		data = js_store_u8(data, 0xce);
+		return js_store_u32(data, num);
 	} else {
-		data = mp_store_u8(data, 0xcf);
-		return mp_store_u64(data, num);
+		data = js_store_u8(data, 0xcf);
+		return js_store_u64(data, num);
 	}
 }
 
-MP_IMPL char *
-mp_encode_int(char *data, int64_t num)
+JS_IMPL char *
+js_encode_int(char *data, int64_t num)
 {
 	assert(num < 0);
 	if (num >= -0x20) {
-		return mp_store_u8(data, 0xe0 | num);
+		return js_store_u8(data, 0xe0 | num);
 	} else if (num >= INT8_MIN) {
-		data = mp_store_u8(data, 0xd0);
-		return mp_store_u8(data, num);
+		data = js_store_u8(data, 0xd0);
+		return js_store_u8(data, num);
 	} else if (num >= INT16_MIN) {
-		data = mp_store_u8(data, 0xd1);
-		return mp_store_u16(data, num);
+		data = js_store_u8(data, 0xd1);
+		return js_store_u16(data, num);
 	} else if (num >= INT32_MIN) {
-		data = mp_store_u8(data, 0xd2);
-		return mp_store_u32(data, num);
+		data = js_store_u8(data, 0xd2);
+		return js_store_u32(data, num);
 	} else {
-		data = mp_store_u8(data, 0xd3);
-		return mp_store_u64(data, num);
+		data = js_store_u8(data, 0xd3);
+		return js_store_u64(data, num);
 	}
 }
 
-MP_IMPL uint64_t
-mp_decode_uint(const char **data)
+JS_IMPL uint64_t
+js_decode_uint(const char **data)
 {
-	uint8_t c = mp_load_u8(data);
+	uint8_t c = js_load_u8(data);
 	switch (c) {
 	case 0xcc:
-		return mp_load_u8(data);
+		return js_load_u8(data);
 	case 0xcd:
-		return mp_load_u16(data);
+		return js_load_u16(data);
 	case 0xce:
-		return mp_load_u32(data);
+		return js_load_u32(data);
 	case 0xcf:
-		return mp_load_u64(data);
+		return js_load_u64(data);
 	default:
-		if (mp_unlikely(c > 0x7f))
-			mp_unreachable();
+		if (js_unlikely(c > 0x7f))
+			js_unreachable();
 		return c;
 	}
 }
 
-MP_IMPL int
-mp_compare_uint(const char *data_a, const char *data_b)
+JS_IMPL int
+js_compare_uint(const char *data_a, const char *data_b)
 {
-	uint8_t ca = mp_load_u8(&data_a);
-	uint8_t cb = mp_load_u8(&data_b);
+	uint8_t ca = js_load_u8(&data_a);
+	uint8_t cb = js_load_u8(&data_b);
 
 	int r = ca - cb;
 	if (r != 0)
@@ -1395,114 +1395,114 @@ mp_compare_uint(const char *data_a, const char *data_b)
 	uint64_t a, b;
 	switch (ca & 0x3) {
 	case 0xcc & 0x3:
-		a = mp_load_u8(&data_a);
-		b = mp_load_u8(&data_b);
+		a = js_load_u8(&data_a);
+		b = js_load_u8(&data_b);
 		break;
 	case 0xcd & 0x3:
-		a = mp_load_u16(&data_a);
-		b = mp_load_u16(&data_b);
+		a = js_load_u16(&data_a);
+		b = js_load_u16(&data_b);
 		break;
 	case 0xce & 0x3:
-		a = mp_load_u32(&data_a);
-		b = mp_load_u32(&data_b);
+		a = js_load_u32(&data_a);
+		b = js_load_u32(&data_b);
 		break;
 	case 0xcf & 0x3:
-		a = mp_load_u64(&data_a);
-		b = mp_load_u64(&data_b);
+		a = js_load_u64(&data_a);
+		b = js_load_u64(&data_b);
 		return a < b ? -1 : a > b;
 		break;
 	default:
-		mp_unreachable();
+		js_unreachable();
 	}
 
 	int64_t v = (a - b);
 	return (v > 0) - (v < 0);
 }
 
-MP_IMPL int64_t
-mp_decode_int(const char **data)
+JS_IMPL int64_t
+js_decode_int(const char **data)
 {
-	uint8_t c = mp_load_u8(data);
+	uint8_t c = js_load_u8(data);
 	switch (c) {
 	case 0xd0:
-		return (int8_t) mp_load_u8(data);
+		return (int8_t) js_load_u8(data);
 	case 0xd1:
-		return (int16_t) mp_load_u16(data);
+		return (int16_t) js_load_u16(data);
 	case 0xd2:
-		return (int32_t) mp_load_u32(data);
+		return (int32_t) js_load_u32(data);
 	case 0xd3:
-		return (int64_t) mp_load_u64(data);
+		return (int64_t) js_load_u64(data);
 	default:
-		if (mp_unlikely(c < 0xe0))
-			mp_unreachable();
+		if (js_unlikely(c < 0xe0))
+			js_unreachable();
 		return (int8_t) (c);
 	}
 }
 
-MP_IMPL uint32_t
-mp_sizeof_float(float num)
+JS_IMPL uint32_t
+js_sizeof_float(float num)
 {
 	(void) num;
 	return 1 + sizeof(float);
 }
 
-MP_IMPL uint32_t
-mp_sizeof_double(double num)
+JS_IMPL uint32_t
+js_sizeof_double(double num)
 {
 	(void) num;
 	return 1 + sizeof(double);
 }
 
-MP_IMPL ptrdiff_t
-mp_check_float(const char *cur, const char *end)
+JS_IMPL ptrdiff_t
+js_check_float(const char *cur, const char *end)
 {
 	assert(cur < end);
-	assert(mp_typeof(*cur) == MP_FLOAT);
+	assert(js_typeof(*cur) == JS_FLOAT);
 	return 1 + sizeof(float) - (end - cur);
 }
 
-MP_IMPL ptrdiff_t
-mp_check_double(const char *cur, const char *end)
+JS_IMPL ptrdiff_t
+js_check_double(const char *cur, const char *end)
 {
 	assert(cur < end);
-	assert(mp_typeof(*cur) == MP_DOUBLE);
+	assert(js_typeof(*cur) == JS_DOUBLE);
 	return 1 + sizeof(double) - (end - cur);
 }
 
-MP_IMPL char *
-mp_encode_float(char *data, float num)
+JS_IMPL char *
+js_encode_float(char *data, float num)
 {
-	data = mp_store_u8(data, 0xca);
-	return mp_store_float(data, num);
+	data = js_store_u8(data, 0xca);
+	return js_store_float(data, num);
 }
 
-MP_IMPL char *
-mp_encode_double(char *data, double num)
+JS_IMPL char *
+js_encode_double(char *data, double num)
 {
-	data = mp_store_u8(data, 0xcb);
-	return mp_store_double(data, num);
+	data = js_store_u8(data, 0xcb);
+	return js_store_double(data, num);
 }
 
-MP_IMPL float
-mp_decode_float(const char **data)
+JS_IMPL float
+js_decode_float(const char **data)
 {
-	uint8_t c = mp_load_u8(data);
+	uint8_t c = js_load_u8(data);
 	assert(c == 0xca);
 	(void) c;
-	return mp_load_float(data);
+	return js_load_float(data);
 }
 
-MP_IMPL double
-mp_decode_double(const char **data)
+JS_IMPL double
+js_decode_double(const char **data)
 {
-	uint8_t c = mp_load_u8(data);
+	uint8_t c = js_load_u8(data);
 	assert(c == 0xcb);
 	(void) c;
-	return mp_load_double(data);
+	return js_load_double(data);
 }
 
-MP_IMPL uint32_t
-mp_sizeof_strl(uint32_t len)
+JS_IMPL uint32_t
+js_sizeof_strl(uint32_t len)
 {
 	if (len <= 31) {
 		return 1;
@@ -1515,14 +1515,14 @@ mp_sizeof_strl(uint32_t len)
 	}
 }
 
-MP_IMPL uint32_t
-mp_sizeof_str(uint32_t len)
+JS_IMPL uint32_t
+js_sizeof_str(uint32_t len)
 {
-	return mp_sizeof_strl(len) + len;
+	return js_sizeof_strl(len) + len;
 }
 
-MP_IMPL uint32_t
-mp_sizeof_binl(uint32_t len)
+JS_IMPL uint32_t
+js_sizeof_binl(uint32_t len)
 {
 	if (len <= UINT8_MAX) {
 		return 1 + sizeof(uint8_t);
@@ -1533,459 +1533,459 @@ mp_sizeof_binl(uint32_t len)
 	}
 }
 
-MP_IMPL uint32_t
-mp_sizeof_bin(uint32_t len)
+JS_IMPL uint32_t
+js_sizeof_bin(uint32_t len)
 {
-	return mp_sizeof_binl(len) + len;
+	return js_sizeof_binl(len) + len;
 }
 
-MP_IMPL char *
-mp_encode_strl(char *data, uint32_t len)
+JS_IMPL char *
+js_encode_strl(char *data, uint32_t len)
 {
 	if (len <= 31) {
-		return mp_store_u8(data, 0xa0 | (uint8_t) len);
+		return js_store_u8(data, 0xa0 | (uint8_t) len);
 	} else if (len <= UINT8_MAX) {
-		data = mp_store_u8(data, 0xd9);
-		return mp_store_u8(data, len);
+		data = js_store_u8(data, 0xd9);
+		return js_store_u8(data, len);
 	} else if (len <= UINT16_MAX) {
-		data = mp_store_u8(data, 0xda);
-		return mp_store_u16(data, len);
+		data = js_store_u8(data, 0xda);
+		return js_store_u16(data, len);
 	} else {
-		data = mp_store_u8(data, 0xdb);
-		return mp_store_u32(data, len);
+		data = js_store_u8(data, 0xdb);
+		return js_store_u32(data, len);
 	}
 }
 
-MP_IMPL char *
-mp_encode_str(char *data, const char *str, uint32_t len)
+JS_IMPL char *
+js_encode_str(char *data, const char *str, uint32_t len)
 {
-	data = mp_encode_strl(data, len);
+	data = js_encode_strl(data, len);
 	memcpy(data, str, len);
 	return data + len;
 }
 
-MP_IMPL char *
-mp_encode_binl(char *data, uint32_t len)
+JS_IMPL char *
+js_encode_binl(char *data, uint32_t len)
 {
 	if (len <= UINT8_MAX) {
-		data = mp_store_u8(data, 0xc4);
-		return mp_store_u8(data, len);
+		data = js_store_u8(data, 0xc4);
+		return js_store_u8(data, len);
 	} else if (len <= UINT16_MAX) {
-		data = mp_store_u8(data, 0xc5);
-		return mp_store_u16(data, len);
+		data = js_store_u8(data, 0xc5);
+		return js_store_u16(data, len);
 	} else {
-		data = mp_store_u8(data, 0xc6);
-		return mp_store_u32(data, len);
+		data = js_store_u8(data, 0xc6);
+		return js_store_u32(data, len);
 	}
 }
 
-MP_IMPL char *
-mp_encode_bin(char *data, const char *str, uint32_t len)
+JS_IMPL char *
+js_encode_bin(char *data, const char *str, uint32_t len)
 {
-	data = mp_encode_binl(data, len);
+	data = js_encode_binl(data, len);
 	memcpy(data, str, len);
 	return data + len;
 }
 
-MP_IMPL ptrdiff_t
-mp_check_strl(const char *cur, const char *end)
+JS_IMPL ptrdiff_t
+js_check_strl(const char *cur, const char *end)
 {
 	assert(cur < end);
-	assert(mp_typeof(*cur) == MP_STR);
+	assert(js_typeof(*cur) == JS_STR);
 
-	uint8_t c = mp_load_u8(&cur);
-	if (mp_likely(c & ~0x1f) == 0xa0)
+	uint8_t c = js_load_u8(&cur);
+	if (js_likely(c & ~0x1f) == 0xa0)
 		return cur - end;
 
-	assert(c >= 0xd9 && c <= 0xdb); /* must be checked above by mp_typeof */
+	assert(c >= 0xd9 && c <= 0xdb); /* must be checked above by js_typeof */
 	uint32_t hsize = 1U << (c & 0x3) >> 1; /* 0xd9->1, 0xda->2, 0xdb->4 */
 	return hsize - (end - cur);
 }
 
-MP_IMPL ptrdiff_t
-mp_check_binl(const char *cur, const char *end)
+JS_IMPL ptrdiff_t
+js_check_binl(const char *cur, const char *end)
 {
-	uint8_t c = mp_load_u8(&cur);
+	uint8_t c = js_load_u8(&cur);
 	assert(cur < end);
-	assert(mp_typeof(c) == MP_BIN);
+	assert(js_typeof(c) == JS_BIN);
 
-	assert(c >= 0xc4 && c <= 0xc6); /* must be checked above by mp_typeof */
+	assert(c >= 0xc4 && c <= 0xc6); /* must be checked above by js_typeof */
 	uint32_t hsize = 1U << (c & 0x3); /* 0xc4->1, 0xc5->2, 0xc6->4 */
 	return hsize - (end - cur);
 }
 
-MP_IMPL uint32_t
-mp_decode_strl(const char **data)
+JS_IMPL uint32_t
+js_decode_strl(const char **data)
 {
-	uint8_t c = mp_load_u8(data);
+	uint8_t c = js_load_u8(data);
 	switch (c) {
 	case 0xd9:
-		return mp_load_u8(data);
+		return js_load_u8(data);
 	case 0xda:
-		return mp_load_u16(data);
+		return js_load_u16(data);
 	case 0xdb:
-		return mp_load_u32(data);
+		return js_load_u32(data);
 	default:
-		if (mp_unlikely(c < 0xa0 || c > 0xbf))
-			mp_unreachable();
+		if (js_unlikely(c < 0xa0 || c > 0xbf))
+			js_unreachable();
 		return c & 0x1f;
 	}
 }
 
-MP_IMPL const char *
-mp_decode_str(const char **data, uint32_t *len)
+JS_IMPL const char *
+js_decode_str(const char **data, uint32_t *len)
 {
 	assert(len != NULL);
 
-	*len = mp_decode_strl(data);
+	*len = js_decode_strl(data);
 	const char *str = *data;
 	*data += *len;
 	return str;
 }
 
-MP_IMPL uint32_t
-mp_decode_binl(const char **data)
+JS_IMPL uint32_t
+js_decode_binl(const char **data)
 {
-	uint8_t c = mp_load_u8(data);
+	uint8_t c = js_load_u8(data);
 
 	switch (c) {
 	case 0xc4:
-		return mp_load_u8(data);
+		return js_load_u8(data);
 	case 0xc5:
-		return mp_load_u16(data);
+		return js_load_u16(data);
 	case 0xc6:
-		return mp_load_u32(data);
+		return js_load_u32(data);
 	default:
-		mp_unreachable();
+		js_unreachable();
 	}
 }
 
-MP_IMPL const char *
-mp_decode_bin(const char **data, uint32_t *len)
+JS_IMPL const char *
+js_decode_bin(const char **data, uint32_t *len)
 {
 	assert(len != NULL);
 
-	*len = mp_decode_binl(data);
+	*len = js_decode_binl(data);
 	const char *str = *data;
 	*data += *len;
 	return str;
 }
 
-MP_IMPL uint32_t
-mp_decode_strbinl(const char **data)
+JS_IMPL uint32_t
+js_decode_strbinl(const char **data)
 {
-	uint8_t c = mp_load_u8(data);
+	uint8_t c = js_load_u8(data);
 
 	switch (c) {
 	case 0xd9:
-		return mp_load_u8(data);
+		return js_load_u8(data);
 	case 0xda:
-		return mp_load_u16(data);
+		return js_load_u16(data);
 	case 0xdb:
-		return mp_load_u32(data);
+		return js_load_u32(data);
 	case 0xc4:
-		return mp_load_u8(data);
+		return js_load_u8(data);
 	case 0xc5:
-		return mp_load_u16(data);
+		return js_load_u16(data);
 	case 0xc6:
-		return mp_load_u32(data);
+		return js_load_u32(data);
 	default:
-		if (mp_unlikely(c < 0xa0 || c > 0xbf))
-			mp_unreachable();
+		if (js_unlikely(c < 0xa0 || c > 0xbf))
+			js_unreachable();
 		return c & 0x1f;
 	}
 }
 
-MP_IMPL const char *
-mp_decode_strbin(const char **data, uint32_t *len)
+JS_IMPL const char *
+js_decode_strbin(const char **data, uint32_t *len)
 {
 	assert(len != NULL);
 
-	*len = mp_decode_strbinl(data);
+	*len = js_decode_strbinl(data);
 	const char *str = *data;
 	*data += *len;
 	return str;
 }
 
-MP_IMPL uint32_t
-mp_sizeof_nil()
+JS_IMPL uint32_t
+js_sizeof_nil()
 {
 	return 1;
 }
 
-MP_IMPL char *
-mp_encode_nil(char *data)
+JS_IMPL char *
+js_encode_nil(char *data)
 {
-	return mp_store_u8(data, 0xc0);
+	return js_store_u8(data, 0xc0);
 }
 
-MP_IMPL ptrdiff_t
-mp_check_nil(const char *cur, const char *end)
+JS_IMPL ptrdiff_t
+js_check_nil(const char *cur, const char *end)
 {
 	assert(cur < end);
-	assert(mp_typeof(*cur) == MP_NIL);
+	assert(js_typeof(*cur) == JS_NIL);
 	return 1 - (end - cur);
 }
 
-MP_IMPL void
-mp_decode_nil(const char **data)
+JS_IMPL void
+js_decode_nil(const char **data)
 {
-	uint8_t c = mp_load_u8(data);
+	uint8_t c = js_load_u8(data);
 	assert(c == 0xc0);
 	(void) c;
 }
 
-MP_IMPL uint32_t
-mp_sizeof_bool(bool val)
+JS_IMPL uint32_t
+js_sizeof_bool(bool val)
 {
 	(void) val;
 	return 1;
 }
 
-MP_IMPL char *
-mp_encode_bool(char *data, bool val)
+JS_IMPL char *
+js_encode_bool(char *data, bool val)
 {
-	return mp_store_u8(data, 0xc2 | (val & 1));
+	return js_store_u8(data, 0xc2 | (val & 1));
 }
 
-MP_IMPL ptrdiff_t
-mp_check_bool(const char *cur, const char *end)
+JS_IMPL ptrdiff_t
+js_check_bool(const char *cur, const char *end)
 {
 	assert(cur < end);
-	assert(mp_typeof(*cur) == MP_BOOL);
+	assert(js_typeof(*cur) == JS_BOOL);
 	return 1 - (end - cur);
 }
 
-MP_IMPL bool
-mp_decode_bool(const char **data)
+JS_IMPL bool
+js_decode_bool(const char **data)
 {
-	uint8_t c = mp_load_u8(data);
+	uint8_t c = js_load_u8(data);
 	switch (c) {
 	case 0xc3:
 		return true;
 	case 0xc2:
 		return false;
 	default:
-		mp_unreachable();
+		js_unreachable();
 	}
 }
 
-/** See mp_parser_hint */
+/** See js_parser_hint */
 enum {
-	MP_HINT = -32,
-	MP_HINT_STR_8 = MP_HINT,
-	MP_HINT_STR_16 = MP_HINT - 1,
-	MP_HINT_STR_32 = MP_HINT - 2,
-	MP_HINT_ARRAY_16 = MP_HINT - 3,
-	MP_HINT_ARRAY_32 = MP_HINT - 4,
-	MP_HINT_MAP_16 = MP_HINT - 5,
-	MP_HINT_MAP_32 = MP_HINT - 6,
-	MP_HINT_EXT_8 = MP_HINT - 7,
-	MP_HINT_EXT_16 = MP_HINT - 8,
-	MP_HINT_EXT_32 = MP_HINT - 9
+	JS_HINT = -32,
+	JS_HINT_STR_8 = JS_HINT,
+	JS_HINT_STR_16 = JS_HINT - 1,
+	JS_HINT_STR_32 = JS_HINT - 2,
+	JS_HINT_ARRAY_16 = JS_HINT - 3,
+	JS_HINT_ARRAY_32 = JS_HINT - 4,
+	JS_HINT_MAP_16 = JS_HINT - 5,
+	JS_HINT_MAP_32 = JS_HINT - 6,
+	JS_HINT_EXT_8 = JS_HINT - 7,
+	JS_HINT_EXT_16 = JS_HINT - 8,
+	JS_HINT_EXT_32 = JS_HINT - 9
 };
 
-MP_PROTO void
-mp_next_slowpath(const char **data, int k);
+JS_PROTO void
+js_next_slowpath(const char **data, int k);
 
-MP_IMPL void
-mp_next_slowpath(const char **data, int k)
+JS_IMPL void
+js_next_slowpath(const char **data, int k)
 {
 	for (; k > 0; k--) {
-		uint8_t c = mp_load_u8(data);
-		int l = mp_parser_hint[c];
-		if (mp_likely(l >= 0)) {
+		uint8_t c = js_load_u8(data);
+		int l = js_parser_hint[c];
+		if (js_likely(l >= 0)) {
 			*data += l;
 			continue;
-		} else if (mp_likely(l > MP_HINT)) {
+		} else if (js_likely(l > JS_HINT)) {
 			k -= l;
 			continue;
 		}
 
 		uint32_t len;
 		switch (l) {
-		case MP_HINT_STR_8:
-			/* MP_STR (8) */
-			len = mp_load_u8(data);
+		case JS_HINT_STR_8:
+			/* JS_STR (8) */
+			len = js_load_u8(data);
 			*data += len;
 			break;
-		case MP_HINT_STR_16:
-			/* MP_STR (16) */
-			len = mp_load_u16(data);
+		case JS_HINT_STR_16:
+			/* JS_STR (16) */
+			len = js_load_u16(data);
 			*data += len;
 			break;
-		case MP_HINT_STR_32:
-			/* MP_STR (32) */
-			len = mp_load_u32(data);
+		case JS_HINT_STR_32:
+			/* JS_STR (32) */
+			len = js_load_u32(data);
 			*data += len;
 			break;
-		case MP_HINT_ARRAY_16:
-			/* MP_ARRAY (16) */
-			k += mp_load_u16(data);
+		case JS_HINT_ARRAY_16:
+			/* JS_ARRAY (16) */
+			k += js_load_u16(data);
 			break;
-		case MP_HINT_ARRAY_32:
-			/* MP_ARRAY (32) */
-			k += mp_load_u32(data);
+		case JS_HINT_ARRAY_32:
+			/* JS_ARRAY (32) */
+			k += js_load_u32(data);
 			break;
-		case MP_HINT_MAP_16:
-			/* MP_MAP (16) */
-			k += 2 * mp_load_u16(data);
+		case JS_HINT_MAP_16:
+			/* JS_MAP (16) */
+			k += 2 * js_load_u16(data);
 			break;
-		case MP_HINT_MAP_32:
-			/* MP_MAP (32) */
-			k += 2 * mp_load_u32(data);
+		case JS_HINT_MAP_32:
+			/* JS_MAP (32) */
+			k += 2 * js_load_u32(data);
 			break;
-		case MP_HINT_EXT_8:
-			/* MP_EXT (8) */
-			len = mp_load_u8(data);
-			mp_load_u8(data);
+		case JS_HINT_EXT_8:
+			/* JS_EXT (8) */
+			len = js_load_u8(data);
+			js_load_u8(data);
 			*data += len;
 			break;
-		case MP_HINT_EXT_16:
-			/* MP_EXT (16) */
-			len = mp_load_u16(data);
-			mp_load_u8(data);
+		case JS_HINT_EXT_16:
+			/* JS_EXT (16) */
+			len = js_load_u16(data);
+			js_load_u8(data);
 			*data += len;
 			break;
-		case MP_HINT_EXT_32:
-			/* MP_EXT (32) */
-			len = mp_load_u32(data);
-			mp_load_u8(data);
+		case JS_HINT_EXT_32:
+			/* JS_EXT (32) */
+			len = js_load_u32(data);
+			js_load_u8(data);
 			*data += len;
 			break;
 		default:
-			mp_unreachable();
+			js_unreachable();
 		}
 	}
 }
 
-MP_IMPL void
-mp_next(const char **data)
+JS_IMPL void
+js_next(const char **data)
 {
 	int k = 1;
 	for (; k > 0; k--) {
-		uint8_t c = mp_load_u8(data);
-		int l = mp_parser_hint[c];
-		if (mp_likely(l >= 0)) {
+		uint8_t c = js_load_u8(data);
+		int l = js_parser_hint[c];
+		if (js_likely(l >= 0)) {
 			*data += l;
 			continue;
-		} else if (mp_likely(c == 0xd9)){
-			/* MP_STR (8) */
-			uint8_t len = mp_load_u8(data);
+		} else if (js_likely(c == 0xd9)){
+			/* JS_STR (8) */
+			uint8_t len = js_load_u8(data);
 			*data += len;
 			continue;
-		} else if (l > MP_HINT) {
+		} else if (l > JS_HINT) {
 			k -= l;
 			continue;
 		} else {
 			*data -= sizeof(uint8_t);
-			return mp_next_slowpath(data, k);
+			return js_next_slowpath(data, k);
 		}
 	}
 }
 
-MP_IMPL int
-mp_check(const char **data, const char *end)
+JS_IMPL int
+js_check(const char **data, const char *end)
 {
 	int k;
 	for (k = 1; k > 0; k--) {
-		if (mp_unlikely(*data >= end))
+		if (js_unlikely(*data >= end))
 			return 1;
 
-		uint8_t c = mp_load_u8(data);
-		int l = mp_parser_hint[c];
-		if (mp_likely(l >= 0)) {
+		uint8_t c = js_load_u8(data);
+		int l = js_parser_hint[c];
+		if (js_likely(l >= 0)) {
 			*data += l;
 			continue;
-		} else if (mp_likely(l > MP_HINT)) {
+		} else if (js_likely(l > JS_HINT)) {
 			k -= l;
 			continue;
 		}
 
 		uint32_t len;
 		switch (l) {
-		case MP_HINT_STR_8:
-			/* MP_STR (8) */
-			if (mp_unlikely(*data + sizeof(uint8_t) > end))
+		case JS_HINT_STR_8:
+			/* JS_STR (8) */
+			if (js_unlikely(*data + sizeof(uint8_t) > end))
 				return 1;
-			len = mp_load_u8(data);
+			len = js_load_u8(data);
 			*data += len;
 			break;
-		case MP_HINT_STR_16:
-			/* MP_STR (16) */
-			if (mp_unlikely(*data + sizeof(uint16_t) > end))
+		case JS_HINT_STR_16:
+			/* JS_STR (16) */
+			if (js_unlikely(*data + sizeof(uint16_t) > end))
 				return 1;
-			len = mp_load_u16(data);
+			len = js_load_u16(data);
 			*data += len;
 			break;
-		case MP_HINT_STR_32:
-			/* MP_STR (32) */
-			if (mp_unlikely(*data + sizeof(uint32_t) > end))
+		case JS_HINT_STR_32:
+			/* JS_STR (32) */
+			if (js_unlikely(*data + sizeof(uint32_t) > end))
 				return 1;
-			len = mp_load_u32(data);
+			len = js_load_u32(data);
 			*data += len;
 			break;
-		case MP_HINT_ARRAY_16:
-			/* MP_ARRAY (16) */
-			if (mp_unlikely(*data + sizeof(uint16_t) > end))
+		case JS_HINT_ARRAY_16:
+			/* JS_ARRAY (16) */
+			if (js_unlikely(*data + sizeof(uint16_t) > end))
 				return 1;
-			k += mp_load_u16(data);
+			k += js_load_u16(data);
 			break;
-		case MP_HINT_ARRAY_32:
-			/* MP_ARRAY (32) */
-			if (mp_unlikely(*data + sizeof(uint32_t) > end))
+		case JS_HINT_ARRAY_32:
+			/* JS_ARRAY (32) */
+			if (js_unlikely(*data + sizeof(uint32_t) > end))
 				return 1;
-			k += mp_load_u32(data);
+			k += js_load_u32(data);
 			break;
-		case MP_HINT_MAP_16:
-			/* MP_MAP (16) */
-			if (mp_unlikely(*data + sizeof(uint16_t) > end))
+		case JS_HINT_MAP_16:
+			/* JS_MAP (16) */
+			if (js_unlikely(*data + sizeof(uint16_t) > end))
 				return false;
-			k += 2 * mp_load_u16(data);
+			k += 2 * js_load_u16(data);
 			break;
-		case MP_HINT_MAP_32:
-			/* MP_MAP (32) */
-			if (mp_unlikely(*data + sizeof(uint32_t) > end))
+		case JS_HINT_MAP_32:
+			/* JS_MAP (32) */
+			if (js_unlikely(*data + sizeof(uint32_t) > end))
 				return 1;
-			k += 2 * mp_load_u32(data);
+			k += 2 * js_load_u32(data);
 			break;
-		case MP_HINT_EXT_8:
-			/* MP_EXT (8) */
-			if (mp_unlikely(*data + sizeof(uint8_t) + 1 > end))
+		case JS_HINT_EXT_8:
+			/* JS_EXT (8) */
+			if (js_unlikely(*data + sizeof(uint8_t) + 1 > end))
 				return 1;
-			len = mp_load_u8(data);
-			mp_load_u8(data);
+			len = js_load_u8(data);
+			js_load_u8(data);
 			*data += len;
 			break;
-		case MP_HINT_EXT_16:
-			/* MP_EXT (16) */
-			if (mp_unlikely(*data + sizeof(uint16_t) + 1 > end))
+		case JS_HINT_EXT_16:
+			/* JS_EXT (16) */
+			if (js_unlikely(*data + sizeof(uint16_t) + 1 > end))
 				return 1;
-			len = mp_load_u16(data);
-			mp_load_u8(data);
+			len = js_load_u16(data);
+			js_load_u8(data);
 			*data += len;
 			break;
-		case MP_HINT_EXT_32:
-			/* MP_EXT (32) */
-			if (mp_unlikely(*data + sizeof(uint32_t) + 1 > end))
+		case JS_HINT_EXT_32:
+			/* JS_EXT (32) */
+			if (js_unlikely(*data + sizeof(uint32_t) + 1 > end))
 				return 1;
-		        len = mp_load_u32(data);
-			mp_load_u8(data);
+		        len = js_load_u32(data);
+			js_load_u8(data);
 			*data += len;
 			break;
 		default:
-			mp_unreachable();
+			js_unreachable();
 		}
 	}
 
-	if (mp_unlikely(*data > end))
+	if (js_unlikely(*data > end))
 		return 1;
 
 	return 0;
 }
 
-MP_IMPL size_t
-mp_vformat(char *data, size_t data_size, const char *format, va_list vl)
+JS_IMPL size_t
+js_vformat(char *data, size_t data_size, const char *format, va_list vl)
 {
 	size_t result = 0;
 	const char *f = NULL;
@@ -2017,9 +2017,9 @@ mp_vformat(char *data, size_t data_size, const char *format, va_list vl)
 			}
 			/* opened '[' must be closed */
 			assert(level == 0);
-			result += mp_sizeof_array(size);
+			result += js_sizeof_array(size);
 			if (result <= data_size)
-				data = mp_encode_array(data, size);
+				data = js_encode_array(data, size);
 		} else if (f[0] == '{') {
 			uint32_t count = 0;
 			int level = 1;
@@ -2049,9 +2049,9 @@ mp_vformat(char *data, size_t data_size, const char *format, va_list vl)
 			/* since map is a pair list, count must be even */
 			assert(count % 2 == 0);
 			uint32_t size = count / 2;
-			result += mp_sizeof_map(size);
+			result += js_sizeof_map(size);
 			if (result <= data_size)
-				data = mp_encode_map(data, size);
+				data = js_encode_map(data, size);
 		} else if (f[0] == '%') {
 			f++;
 			assert(f[0]);
@@ -2067,32 +2067,32 @@ mp_vformat(char *data, size_t data_size, const char *format, va_list vl)
 			} else if (f[0] == 's') {
 				const char *str = va_arg(vl, const char *);
 				uint32_t len = (uint32_t)strlen(str);
-				result += mp_sizeof_str(len);
+				result += js_sizeof_str(len);
 				if (result <= data_size)
-					data = mp_encode_str(data, str, len);
+					data = js_encode_str(data, str, len);
 			} else if (f[0] == '.' && f[1] == '*' && f[2] == 's') {
 				uint32_t len = va_arg(vl, uint32_t);
 				const char *str = va_arg(vl, const char *);
-				result += mp_sizeof_str(len);
+				result += js_sizeof_str(len);
 				if (result <= data_size)
-					data = mp_encode_str(data, str, len);
+					data = js_encode_str(data, str, len);
 				f += 2;
 			} else if(f[0] == 'f') {
 				float v = (float)va_arg(vl, double);
-				result += mp_sizeof_float(v);
+				result += js_sizeof_float(v);
 				if (result <= data_size)
-					data = mp_encode_float(data, v);
+					data = js_encode_float(data, v);
 			} else if(f[0] == 'l' && f[1] == 'f') {
 				double v = va_arg(vl, double);
-				result += mp_sizeof_double(v);
+				result += js_sizeof_double(v);
 				if (result <= data_size)
-					data = mp_encode_double(data, v);
+					data = js_encode_double(data, v);
 				f++;
 			} else if(f[0] == 'b') {
 				bool v = (bool)va_arg(vl, int);
-				result += mp_sizeof_bool(v);
+				result += js_sizeof_bool(v);
 				if (result <= data_size)
-					data = mp_encode_bool(data, v);
+					data = js_encode_bool(data, v);
 			} else if (f[0] == 'l'
 				   && (f[1] == 'd' || f[1] == 'i')) {
 				int_value = va_arg(vl, long);
@@ -2135,66 +2135,66 @@ mp_vformat(char *data, size_t data_size, const char *format, va_list vl)
 			}
 
 			if (int_status == 1 && int_value < 0) {
-				result += mp_sizeof_int(int_value);
+				result += js_sizeof_int(int_value);
 				if (result <= data_size)
-					data = mp_encode_int(data, int_value);
+					data = js_encode_int(data, int_value);
 			} else if(int_status) {
-				result += mp_sizeof_uint(int_value);
+				result += js_sizeof_uint(int_value);
 				if (result <= data_size)
-					data = mp_encode_uint(data, int_value);
+					data = js_encode_uint(data, int_value);
 			}
 		} else if (f[0] == 'N' && f[1] == 'I' && f[2] == 'L') {
-			result += mp_sizeof_nil();
+			result += js_sizeof_nil();
 			if (result <= data_size)
-				data = mp_encode_nil(data);
+				data = js_encode_nil(data);
 			f += 2;
 		}
 	}
 	return result;
 }
 
-MP_IMPL size_t
-mp_format(char *data, size_t data_size, const char *format, ...)
+JS_IMPL size_t
+js_format(char *data, size_t data_size, const char *format, ...)
 {
 	va_list args;
 	va_start(args, format);
-	size_t res = mp_vformat(data, data_size, format, args);
+	size_t res = js_vformat(data, data_size, format, args);
 	va_end(args);
 	return res;
 }
 
-MP_PROTO int
-mp_fprint_internal(FILE *file, const char **data);
+JS_PROTO int
+js_fprint_internal(FILE *file, const char **data);
 
-MP_IMPL int
-mp_fprint_internal(FILE *file, const char **data)
+JS_IMPL int
+js_fprint_internal(FILE *file, const char **data)
 {
-#define _CHECK_RC(exp) do { if (mp_unlikely((exp) < 0)) return -1; } while(0)
-	switch (mp_typeof(**data)) {
-	case MP_NIL:
-		mp_decode_nil(data);
+#define _CHECK_RC(exp) do { if (js_unlikely((exp) < 0)) return -1; } while(0)
+	switch (js_typeof(**data)) {
+	case JS_NIL:
+		js_decode_nil(data);
 		_CHECK_RC(fputs("null", file));
 		break;
-	case MP_UINT:
+	case JS_UINT:
 		_CHECK_RC(fprintf(file, "%llu", (unsigned long long)
-			      mp_decode_uint(data)));
+			      js_decode_uint(data)));
 		break;
-	case MP_INT:
+	case JS_INT:
 		_CHECK_RC(fprintf(file, "%lld", (long long)
-			      mp_decode_int(data)));
+			      js_decode_int(data)));
 		break;
-	case MP_STR:
-	case MP_BIN:
+	case JS_STR:
+	case JS_BIN:
 	{
-		uint32_t len = mp_typeof(**data) == MP_STR ?
-			mp_decode_strl(data) : mp_decode_binl(data);
+		uint32_t len = js_typeof(**data) == JS_STR ?
+			js_decode_strl(data) : js_decode_binl(data);
 		_CHECK_RC(fputc('"', file));
 		const char *s;
 		for (s = *data; s < *data + len; s++) {
 			unsigned char c = (unsigned char ) *s;
-			if (c < 128 && mp_char2escape[c] != NULL) {
+			if (c < 128 && js_char2escape[c] != NULL) {
 				/* Escape character */
-				_CHECK_RC(fputs(mp_char2escape[c], file));
+				_CHECK_RC(fputs(js_char2escape[c], file));
 			} else {
 				_CHECK_RC(fputc(c, file));
 			}
@@ -2203,61 +2203,61 @@ mp_fprint_internal(FILE *file, const char **data)
 		*data += len;
 		break;
 	}
-	case MP_ARRAY:
+	case JS_ARRAY:
 	{
-		uint32_t size = mp_decode_array(data);
+		uint32_t size = js_decode_array(data);
 		_CHECK_RC(fputc('[', file));
 		uint32_t i;
 		for (i = 0; i < size; i++) {
 			if (i)
 				_CHECK_RC(fputs(", ", file));
-			_CHECK_RC(mp_fprint_internal(file, data));
+			_CHECK_RC(js_fprint_internal(file, data));
 		}
 		_CHECK_RC(fputc(']', file));
 		break;
 	}
-	case MP_MAP:
+	case JS_MAP:
 	{
-		uint32_t size = mp_decode_map(data);
+		uint32_t size = js_decode_map(data);
 		_CHECK_RC(fputc('{', file));
 		uint32_t i;
 		for (i = 0; i < size; i++) {
 			if (i)
 				_CHECK_RC(fprintf(file, ", "));
-			_CHECK_RC(mp_fprint_internal(file, data));
+			_CHECK_RC(js_fprint_internal(file, data));
 			_CHECK_RC(fputs(": ", file));
-			_CHECK_RC(mp_fprint_internal(file, data));
+			_CHECK_RC(js_fprint_internal(file, data));
 		}
 		_CHECK_RC(fputc('}', file));
 		break;
 	}
-	case MP_BOOL:
-		_CHECK_RC(fputs(mp_decode_bool(data) ? "true" : "false", file));
+	case JS_BOOL:
+		_CHECK_RC(fputs(js_decode_bool(data) ? "true" : "false", file));
 		break;
-	case MP_FLOAT:
-		_CHECK_RC(fprintf(file, "%g", mp_decode_float(data)));
+	case JS_FLOAT:
+		_CHECK_RC(fprintf(file, "%g", js_decode_float(data)));
 		break;
-	case MP_DOUBLE:
-		_CHECK_RC(fprintf(file, "%lg", mp_decode_double(data)));
+	case JS_DOUBLE:
+		_CHECK_RC(fprintf(file, "%lg", js_decode_double(data)));
 		break;
-	case MP_EXT:
-		mp_next(data);
+	case JS_EXT:
+		js_next(data);
 		_CHECK_RC(fputs("undefined", file));
 		break;
 	default:
-		mp_unreachable();
+		js_unreachable();
 		return -1;
 	}
 	return 0;
 #undef _CHECK_RC
 }
 
-MP_IMPL int
-mp_fprint(FILE *file, const char *data)
+JS_IMPL int
+js_fprint(FILE *file, const char *data)
 {
 	if (!file)
 		file = stdout;
-	int res = mp_fprint_internal(file, &data);
+	int res = js_fprint_internal(file, &data);
 	return res;
 }
 
@@ -2273,325 +2273,325 @@ mp_fprint(FILE *file, const char *data)
 
 /** \cond false */
 
-#if defined(MP_SOURCE)
+#if defined(JS_SOURCE)
 
 /**
- * This lookup table used by mp_sizeof() to determine enum mp_type by the first
- * byte of MsgPack element.
+ * This lookup table used by js_sizeof() to determine enum js_type by the first
+ * byte of JSONPack element.
  */
-const enum mp_type mp_type_hint[256]= {
-	/* {{{ MP_UINT (fixed) */
-	/* 0x00 */ MP_UINT,
-	/* 0x01 */ MP_UINT,
-	/* 0x02 */ MP_UINT,
-	/* 0x03 */ MP_UINT,
-	/* 0x04 */ MP_UINT,
-	/* 0x05 */ MP_UINT,
-	/* 0x06 */ MP_UINT,
-	/* 0x07 */ MP_UINT,
-	/* 0x08 */ MP_UINT,
-	/* 0x09 */ MP_UINT,
-	/* 0x0a */ MP_UINT,
-	/* 0x0b */ MP_UINT,
-	/* 0x0c */ MP_UINT,
-	/* 0x0d */ MP_UINT,
-	/* 0x0e */ MP_UINT,
-	/* 0x0f */ MP_UINT,
-	/* 0x10 */ MP_UINT,
-	/* 0x11 */ MP_UINT,
-	/* 0x12 */ MP_UINT,
-	/* 0x13 */ MP_UINT,
-	/* 0x14 */ MP_UINT,
-	/* 0x15 */ MP_UINT,
-	/* 0x16 */ MP_UINT,
-	/* 0x17 */ MP_UINT,
-	/* 0x18 */ MP_UINT,
-	/* 0x19 */ MP_UINT,
-	/* 0x1a */ MP_UINT,
-	/* 0x1b */ MP_UINT,
-	/* 0x1c */ MP_UINT,
-	/* 0x1d */ MP_UINT,
-	/* 0x1e */ MP_UINT,
-	/* 0x1f */ MP_UINT,
-	/* 0x20 */ MP_UINT,
-	/* 0x21 */ MP_UINT,
-	/* 0x22 */ MP_UINT,
-	/* 0x23 */ MP_UINT,
-	/* 0x24 */ MP_UINT,
-	/* 0x25 */ MP_UINT,
-	/* 0x26 */ MP_UINT,
-	/* 0x27 */ MP_UINT,
-	/* 0x28 */ MP_UINT,
-	/* 0x29 */ MP_UINT,
-	/* 0x2a */ MP_UINT,
-	/* 0x2b */ MP_UINT,
-	/* 0x2c */ MP_UINT,
-	/* 0x2d */ MP_UINT,
-	/* 0x2e */ MP_UINT,
-	/* 0x2f */ MP_UINT,
-	/* 0x30 */ MP_UINT,
-	/* 0x31 */ MP_UINT,
-	/* 0x32 */ MP_UINT,
-	/* 0x33 */ MP_UINT,
-	/* 0x34 */ MP_UINT,
-	/* 0x35 */ MP_UINT,
-	/* 0x36 */ MP_UINT,
-	/* 0x37 */ MP_UINT,
-	/* 0x38 */ MP_UINT,
-	/* 0x39 */ MP_UINT,
-	/* 0x3a */ MP_UINT,
-	/* 0x3b */ MP_UINT,
-	/* 0x3c */ MP_UINT,
-	/* 0x3d */ MP_UINT,
-	/* 0x3e */ MP_UINT,
-	/* 0x3f */ MP_UINT,
-	/* 0x40 */ MP_UINT,
-	/* 0x41 */ MP_UINT,
-	/* 0x42 */ MP_UINT,
-	/* 0x43 */ MP_UINT,
-	/* 0x44 */ MP_UINT,
-	/* 0x45 */ MP_UINT,
-	/* 0x46 */ MP_UINT,
-	/* 0x47 */ MP_UINT,
-	/* 0x48 */ MP_UINT,
-	/* 0x49 */ MP_UINT,
-	/* 0x4a */ MP_UINT,
-	/* 0x4b */ MP_UINT,
-	/* 0x4c */ MP_UINT,
-	/* 0x4d */ MP_UINT,
-	/* 0x4e */ MP_UINT,
-	/* 0x4f */ MP_UINT,
-	/* 0x50 */ MP_UINT,
-	/* 0x51 */ MP_UINT,
-	/* 0x52 */ MP_UINT,
-	/* 0x53 */ MP_UINT,
-	/* 0x54 */ MP_UINT,
-	/* 0x55 */ MP_UINT,
-	/* 0x56 */ MP_UINT,
-	/* 0x57 */ MP_UINT,
-	/* 0x58 */ MP_UINT,
-	/* 0x59 */ MP_UINT,
-	/* 0x5a */ MP_UINT,
-	/* 0x5b */ MP_UINT,
-	/* 0x5c */ MP_UINT,
-	/* 0x5d */ MP_UINT,
-	/* 0x5e */ MP_UINT,
-	/* 0x5f */ MP_UINT,
-	/* 0x60 */ MP_UINT,
-	/* 0x61 */ MP_UINT,
-	/* 0x62 */ MP_UINT,
-	/* 0x63 */ MP_UINT,
-	/* 0x64 */ MP_UINT,
-	/* 0x65 */ MP_UINT,
-	/* 0x66 */ MP_UINT,
-	/* 0x67 */ MP_UINT,
-	/* 0x68 */ MP_UINT,
-	/* 0x69 */ MP_UINT,
-	/* 0x6a */ MP_UINT,
-	/* 0x6b */ MP_UINT,
-	/* 0x6c */ MP_UINT,
-	/* 0x6d */ MP_UINT,
-	/* 0x6e */ MP_UINT,
-	/* 0x6f */ MP_UINT,
-	/* 0x70 */ MP_UINT,
-	/* 0x71 */ MP_UINT,
-	/* 0x72 */ MP_UINT,
-	/* 0x73 */ MP_UINT,
-	/* 0x74 */ MP_UINT,
-	/* 0x75 */ MP_UINT,
-	/* 0x76 */ MP_UINT,
-	/* 0x77 */ MP_UINT,
-	/* 0x78 */ MP_UINT,
-	/* 0x79 */ MP_UINT,
-	/* 0x7a */ MP_UINT,
-	/* 0x7b */ MP_UINT,
-	/* 0x7c */ MP_UINT,
-	/* 0x7d */ MP_UINT,
-	/* 0x7e */ MP_UINT,
-	/* 0x7f */ MP_UINT,
+const enum js_type js_type_hint[256]= {
+	/* {{{ JS_UINT (fixed) */
+	/* 0x00 */ JS_UINT,
+	/* 0x01 */ JS_UINT,
+	/* 0x02 */ JS_UINT,
+	/* 0x03 */ JS_UINT,
+	/* 0x04 */ JS_UINT,
+	/* 0x05 */ JS_UINT,
+	/* 0x06 */ JS_UINT,
+	/* 0x07 */ JS_UINT,
+	/* 0x08 */ JS_UINT,
+	/* 0x09 */ JS_UINT,
+	/* 0x0a */ JS_UINT,
+	/* 0x0b */ JS_UINT,
+	/* 0x0c */ JS_UINT,
+	/* 0x0d */ JS_UINT,
+	/* 0x0e */ JS_UINT,
+	/* 0x0f */ JS_UINT,
+	/* 0x10 */ JS_UINT,
+	/* 0x11 */ JS_UINT,
+	/* 0x12 */ JS_UINT,
+	/* 0x13 */ JS_UINT,
+	/* 0x14 */ JS_UINT,
+	/* 0x15 */ JS_UINT,
+	/* 0x16 */ JS_UINT,
+	/* 0x17 */ JS_UINT,
+	/* 0x18 */ JS_UINT,
+	/* 0x19 */ JS_UINT,
+	/* 0x1a */ JS_UINT,
+	/* 0x1b */ JS_UINT,
+	/* 0x1c */ JS_UINT,
+	/* 0x1d */ JS_UINT,
+	/* 0x1e */ JS_UINT,
+	/* 0x1f */ JS_UINT,
+	/* 0x20 */ JS_UINT,
+	/* 0x21 */ JS_UINT,
+	/* 0x22 */ JS_UINT,
+	/* 0x23 */ JS_UINT,
+	/* 0x24 */ JS_UINT,
+	/* 0x25 */ JS_UINT,
+	/* 0x26 */ JS_UINT,
+	/* 0x27 */ JS_UINT,
+	/* 0x28 */ JS_UINT,
+	/* 0x29 */ JS_UINT,
+	/* 0x2a */ JS_UINT,
+	/* 0x2b */ JS_UINT,
+	/* 0x2c */ JS_UINT,
+	/* 0x2d */ JS_UINT,
+	/* 0x2e */ JS_UINT,
+	/* 0x2f */ JS_UINT,
+	/* 0x30 */ JS_UINT,
+	/* 0x31 */ JS_UINT,
+	/* 0x32 */ JS_UINT,
+	/* 0x33 */ JS_UINT,
+	/* 0x34 */ JS_UINT,
+	/* 0x35 */ JS_UINT,
+	/* 0x36 */ JS_UINT,
+	/* 0x37 */ JS_UINT,
+	/* 0x38 */ JS_UINT,
+	/* 0x39 */ JS_UINT,
+	/* 0x3a */ JS_UINT,
+	/* 0x3b */ JS_UINT,
+	/* 0x3c */ JS_UINT,
+	/* 0x3d */ JS_UINT,
+	/* 0x3e */ JS_UINT,
+	/* 0x3f */ JS_UINT,
+	/* 0x40 */ JS_UINT,
+	/* 0x41 */ JS_UINT,
+	/* 0x42 */ JS_UINT,
+	/* 0x43 */ JS_UINT,
+	/* 0x44 */ JS_UINT,
+	/* 0x45 */ JS_UINT,
+	/* 0x46 */ JS_UINT,
+	/* 0x47 */ JS_UINT,
+	/* 0x48 */ JS_UINT,
+	/* 0x49 */ JS_UINT,
+	/* 0x4a */ JS_UINT,
+	/* 0x4b */ JS_UINT,
+	/* 0x4c */ JS_UINT,
+	/* 0x4d */ JS_UINT,
+	/* 0x4e */ JS_UINT,
+	/* 0x4f */ JS_UINT,
+	/* 0x50 */ JS_UINT,
+	/* 0x51 */ JS_UINT,
+	/* 0x52 */ JS_UINT,
+	/* 0x53 */ JS_UINT,
+	/* 0x54 */ JS_UINT,
+	/* 0x55 */ JS_UINT,
+	/* 0x56 */ JS_UINT,
+	/* 0x57 */ JS_UINT,
+	/* 0x58 */ JS_UINT,
+	/* 0x59 */ JS_UINT,
+	/* 0x5a */ JS_UINT,
+	/* 0x5b */ JS_UINT,
+	/* 0x5c */ JS_UINT,
+	/* 0x5d */ JS_UINT,
+	/* 0x5e */ JS_UINT,
+	/* 0x5f */ JS_UINT,
+	/* 0x60 */ JS_UINT,
+	/* 0x61 */ JS_UINT,
+	/* 0x62 */ JS_UINT,
+	/* 0x63 */ JS_UINT,
+	/* 0x64 */ JS_UINT,
+	/* 0x65 */ JS_UINT,
+	/* 0x66 */ JS_UINT,
+	/* 0x67 */ JS_UINT,
+	/* 0x68 */ JS_UINT,
+	/* 0x69 */ JS_UINT,
+	/* 0x6a */ JS_UINT,
+	/* 0x6b */ JS_UINT,
+	/* 0x6c */ JS_UINT,
+	/* 0x6d */ JS_UINT,
+	/* 0x6e */ JS_UINT,
+	/* 0x6f */ JS_UINT,
+	/* 0x70 */ JS_UINT,
+	/* 0x71 */ JS_UINT,
+	/* 0x72 */ JS_UINT,
+	/* 0x73 */ JS_UINT,
+	/* 0x74 */ JS_UINT,
+	/* 0x75 */ JS_UINT,
+	/* 0x76 */ JS_UINT,
+	/* 0x77 */ JS_UINT,
+	/* 0x78 */ JS_UINT,
+	/* 0x79 */ JS_UINT,
+	/* 0x7a */ JS_UINT,
+	/* 0x7b */ JS_UINT,
+	/* 0x7c */ JS_UINT,
+	/* 0x7d */ JS_UINT,
+	/* 0x7e */ JS_UINT,
+	/* 0x7f */ JS_UINT,
 	/* }}} */
 
-	/* {{{ MP_MAP (fixed) */
-	/* 0x80 */ MP_MAP,
-	/* 0x81 */ MP_MAP,
-	/* 0x82 */ MP_MAP,
-	/* 0x83 */ MP_MAP,
-	/* 0x84 */ MP_MAP,
-	/* 0x85 */ MP_MAP,
-	/* 0x86 */ MP_MAP,
-	/* 0x87 */ MP_MAP,
-	/* 0x88 */ MP_MAP,
-	/* 0x89 */ MP_MAP,
-	/* 0x8a */ MP_MAP,
-	/* 0x8b */ MP_MAP,
-	/* 0x8c */ MP_MAP,
-	/* 0x8d */ MP_MAP,
-	/* 0x8e */ MP_MAP,
-	/* 0x8f */ MP_MAP,
+	/* {{{ JS_MAP (fixed) */
+	/* 0x80 */ JS_MAP,
+	/* 0x81 */ JS_MAP,
+	/* 0x82 */ JS_MAP,
+	/* 0x83 */ JS_MAP,
+	/* 0x84 */ JS_MAP,
+	/* 0x85 */ JS_MAP,
+	/* 0x86 */ JS_MAP,
+	/* 0x87 */ JS_MAP,
+	/* 0x88 */ JS_MAP,
+	/* 0x89 */ JS_MAP,
+	/* 0x8a */ JS_MAP,
+	/* 0x8b */ JS_MAP,
+	/* 0x8c */ JS_MAP,
+	/* 0x8d */ JS_MAP,
+	/* 0x8e */ JS_MAP,
+	/* 0x8f */ JS_MAP,
 	/* }}} */
 
-	/* {{{ MP_ARRAY (fixed) */
-	/* 0x90 */ MP_ARRAY,
-	/* 0x91 */ MP_ARRAY,
-	/* 0x92 */ MP_ARRAY,
-	/* 0x93 */ MP_ARRAY,
-	/* 0x94 */ MP_ARRAY,
-	/* 0x95 */ MP_ARRAY,
-	/* 0x96 */ MP_ARRAY,
-	/* 0x97 */ MP_ARRAY,
-	/* 0x98 */ MP_ARRAY,
-	/* 0x99 */ MP_ARRAY,
-	/* 0x9a */ MP_ARRAY,
-	/* 0x9b */ MP_ARRAY,
-	/* 0x9c */ MP_ARRAY,
-	/* 0x9d */ MP_ARRAY,
-	/* 0x9e */ MP_ARRAY,
-	/* 0x9f */ MP_ARRAY,
+	/* {{{ JS_ARRAY (fixed) */
+	/* 0x90 */ JS_ARRAY,
+	/* 0x91 */ JS_ARRAY,
+	/* 0x92 */ JS_ARRAY,
+	/* 0x93 */ JS_ARRAY,
+	/* 0x94 */ JS_ARRAY,
+	/* 0x95 */ JS_ARRAY,
+	/* 0x96 */ JS_ARRAY,
+	/* 0x97 */ JS_ARRAY,
+	/* 0x98 */ JS_ARRAY,
+	/* 0x99 */ JS_ARRAY,
+	/* 0x9a */ JS_ARRAY,
+	/* 0x9b */ JS_ARRAY,
+	/* 0x9c */ JS_ARRAY,
+	/* 0x9d */ JS_ARRAY,
+	/* 0x9e */ JS_ARRAY,
+	/* 0x9f */ JS_ARRAY,
 	/* }}} */
 
-	/* {{{ MP_STR (fixed) */
-	/* 0xa0 */ MP_STR,
-	/* 0xa1 */ MP_STR,
-	/* 0xa2 */ MP_STR,
-	/* 0xa3 */ MP_STR,
-	/* 0xa4 */ MP_STR,
-	/* 0xa5 */ MP_STR,
-	/* 0xa6 */ MP_STR,
-	/* 0xa7 */ MP_STR,
-	/* 0xa8 */ MP_STR,
-	/* 0xa9 */ MP_STR,
-	/* 0xaa */ MP_STR,
-	/* 0xab */ MP_STR,
-	/* 0xac */ MP_STR,
-	/* 0xad */ MP_STR,
-	/* 0xae */ MP_STR,
-	/* 0xaf */ MP_STR,
-	/* 0xb0 */ MP_STR,
-	/* 0xb1 */ MP_STR,
-	/* 0xb2 */ MP_STR,
-	/* 0xb3 */ MP_STR,
-	/* 0xb4 */ MP_STR,
-	/* 0xb5 */ MP_STR,
-	/* 0xb6 */ MP_STR,
-	/* 0xb7 */ MP_STR,
-	/* 0xb8 */ MP_STR,
-	/* 0xb9 */ MP_STR,
-	/* 0xba */ MP_STR,
-	/* 0xbb */ MP_STR,
-	/* 0xbc */ MP_STR,
-	/* 0xbd */ MP_STR,
-	/* 0xbe */ MP_STR,
-	/* 0xbf */ MP_STR,
+	/* {{{ JS_STR (fixed) */
+	/* 0xa0 */ JS_STR,
+	/* 0xa1 */ JS_STR,
+	/* 0xa2 */ JS_STR,
+	/* 0xa3 */ JS_STR,
+	/* 0xa4 */ JS_STR,
+	/* 0xa5 */ JS_STR,
+	/* 0xa6 */ JS_STR,
+	/* 0xa7 */ JS_STR,
+	/* 0xa8 */ JS_STR,
+	/* 0xa9 */ JS_STR,
+	/* 0xaa */ JS_STR,
+	/* 0xab */ JS_STR,
+	/* 0xac */ JS_STR,
+	/* 0xad */ JS_STR,
+	/* 0xae */ JS_STR,
+	/* 0xaf */ JS_STR,
+	/* 0xb0 */ JS_STR,
+	/* 0xb1 */ JS_STR,
+	/* 0xb2 */ JS_STR,
+	/* 0xb3 */ JS_STR,
+	/* 0xb4 */ JS_STR,
+	/* 0xb5 */ JS_STR,
+	/* 0xb6 */ JS_STR,
+	/* 0xb7 */ JS_STR,
+	/* 0xb8 */ JS_STR,
+	/* 0xb9 */ JS_STR,
+	/* 0xba */ JS_STR,
+	/* 0xbb */ JS_STR,
+	/* 0xbc */ JS_STR,
+	/* 0xbd */ JS_STR,
+	/* 0xbe */ JS_STR,
+	/* 0xbf */ JS_STR,
 	/* }}} */
 
-	/* {{{ MP_NIL, MP_BOOL */
-	/* 0xc0 */ MP_NIL,
-	/* 0xc1 */ MP_EXT, /* never used */
-	/* 0xc2 */ MP_BOOL,
-	/* 0xc3 */ MP_BOOL,
+	/* {{{ JS_NIL, JS_BOOL */
+	/* 0xc0 */ JS_NIL,
+	/* 0xc1 */ JS_EXT, /* never used */
+	/* 0xc2 */ JS_BOOL,
+	/* 0xc3 */ JS_BOOL,
 	/* }}} */
 
-	/* {{{ MP_BIN */
-	/* 0xc4 */ MP_BIN,   /* MP_BIN(8)  */
-	/* 0xc5 */ MP_BIN,   /* MP_BIN(16) */
-	/* 0xc6 */ MP_BIN,   /* MP_BIN(32) */
+	/* {{{ JS_BIN */
+	/* 0xc4 */ JS_BIN,   /* JS_BIN(8)  */
+	/* 0xc5 */ JS_BIN,   /* JS_BIN(16) */
+	/* 0xc6 */ JS_BIN,   /* JS_BIN(32) */
 	/* }}} */
 
-	/* {{{ MP_EXT */
-	/* 0xc7 */ MP_EXT,
-	/* 0xc8 */ MP_EXT,
-	/* 0xc9 */ MP_EXT,
+	/* {{{ JS_EXT */
+	/* 0xc7 */ JS_EXT,
+	/* 0xc8 */ JS_EXT,
+	/* 0xc9 */ JS_EXT,
 	/* }}} */
 
-	/* {{{ MP_FLOAT, MP_DOUBLE */
-	/* 0xca */ MP_FLOAT,
-	/* 0xcb */ MP_DOUBLE,
+	/* {{{ JS_FLOAT, JS_DOUBLE */
+	/* 0xca */ JS_FLOAT,
+	/* 0xcb */ JS_DOUBLE,
 	/* }}} */
 
-	/* {{{ MP_UINT */
-	/* 0xcc */ MP_UINT,
-	/* 0xcd */ MP_UINT,
-	/* 0xce */ MP_UINT,
-	/* 0xcf */ MP_UINT,
+	/* {{{ JS_UINT */
+	/* 0xcc */ JS_UINT,
+	/* 0xcd */ JS_UINT,
+	/* 0xce */ JS_UINT,
+	/* 0xcf */ JS_UINT,
 	/* }}} */
 
-	/* {{{ MP_INT */
-	/* 0xd0 */ MP_INT,   /* MP_INT (8)  */
-	/* 0xd1 */ MP_INT,   /* MP_INT (16) */
-	/* 0xd2 */ MP_INT,   /* MP_INT (32) */
-	/* 0xd3 */ MP_INT,   /* MP_INT (64) */
+	/* {{{ JS_INT */
+	/* 0xd0 */ JS_INT,   /* JS_INT (8)  */
+	/* 0xd1 */ JS_INT,   /* JS_INT (16) */
+	/* 0xd2 */ JS_INT,   /* JS_INT (32) */
+	/* 0xd3 */ JS_INT,   /* JS_INT (64) */
 	/* }}} */
 
-	/* {{{ MP_EXT */
-	/* 0xd4 */ MP_EXT,   /* MP_INT (8)    */
-	/* 0xd5 */ MP_EXT,   /* MP_INT (16)   */
-	/* 0xd6 */ MP_EXT,   /* MP_INT (32)   */
-	/* 0xd7 */ MP_EXT,   /* MP_INT (64)   */
-	/* 0xd8 */ MP_EXT,   /* MP_INT (127)  */
+	/* {{{ JS_EXT */
+	/* 0xd4 */ JS_EXT,   /* JS_INT (8)    */
+	/* 0xd5 */ JS_EXT,   /* JS_INT (16)   */
+	/* 0xd6 */ JS_EXT,   /* JS_INT (32)   */
+	/* 0xd7 */ JS_EXT,   /* JS_INT (64)   */
+	/* 0xd8 */ JS_EXT,   /* JS_INT (127)  */
 	/* }}} */
 
-	/* {{{ MP_STR */
-	/* 0xd9 */ MP_STR,   /* MP_STR(8)  */
-	/* 0xda */ MP_STR,   /* MP_STR(16) */
-	/* 0xdb */ MP_STR,   /* MP_STR(32) */
+	/* {{{ JS_STR */
+	/* 0xd9 */ JS_STR,   /* JS_STR(8)  */
+	/* 0xda */ JS_STR,   /* JS_STR(16) */
+	/* 0xdb */ JS_STR,   /* JS_STR(32) */
 	/* }}} */
 
-	/* {{{ MP_ARRAY */
-	/* 0xdc */ MP_ARRAY, /* MP_ARRAY(16)  */
-	/* 0xdd */ MP_ARRAY, /* MP_ARRAY(32)  */
+	/* {{{ JS_ARRAY */
+	/* 0xdc */ JS_ARRAY, /* JS_ARRAY(16)  */
+	/* 0xdd */ JS_ARRAY, /* JS_ARRAY(32)  */
 	/* }}} */
 
-	/* {{{ MP_MAP */
-	/* 0xde */ MP_MAP,   /* MP_MAP (16) */
-	/* 0xdf */ MP_MAP,   /* MP_MAP (32) */
+	/* {{{ JS_MAP */
+	/* 0xde */ JS_MAP,   /* JS_MAP (16) */
+	/* 0xdf */ JS_MAP,   /* JS_MAP (32) */
 	/* }}} */
 
-	/* {{{ MP_INT */
-	/* 0xe0 */ MP_INT,
-	/* 0xe1 */ MP_INT,
-	/* 0xe2 */ MP_INT,
-	/* 0xe3 */ MP_INT,
-	/* 0xe4 */ MP_INT,
-	/* 0xe5 */ MP_INT,
-	/* 0xe6 */ MP_INT,
-	/* 0xe7 */ MP_INT,
-	/* 0xe8 */ MP_INT,
-	/* 0xe9 */ MP_INT,
-	/* 0xea */ MP_INT,
-	/* 0xeb */ MP_INT,
-	/* 0xec */ MP_INT,
-	/* 0xed */ MP_INT,
-	/* 0xee */ MP_INT,
-	/* 0xef */ MP_INT,
-	/* 0xf0 */ MP_INT,
-	/* 0xf1 */ MP_INT,
-	/* 0xf2 */ MP_INT,
-	/* 0xf3 */ MP_INT,
-	/* 0xf4 */ MP_INT,
-	/* 0xf5 */ MP_INT,
-	/* 0xf6 */ MP_INT,
-	/* 0xf7 */ MP_INT,
-	/* 0xf8 */ MP_INT,
-	/* 0xf9 */ MP_INT,
-	/* 0xfa */ MP_INT,
-	/* 0xfb */ MP_INT,
-	/* 0xfc */ MP_INT,
-	/* 0xfd */ MP_INT,
-	/* 0xfe */ MP_INT,
-	/* 0xff */ MP_INT
+	/* {{{ JS_INT */
+	/* 0xe0 */ JS_INT,
+	/* 0xe1 */ JS_INT,
+	/* 0xe2 */ JS_INT,
+	/* 0xe3 */ JS_INT,
+	/* 0xe4 */ JS_INT,
+	/* 0xe5 */ JS_INT,
+	/* 0xe6 */ JS_INT,
+	/* 0xe7 */ JS_INT,
+	/* 0xe8 */ JS_INT,
+	/* 0xe9 */ JS_INT,
+	/* 0xea */ JS_INT,
+	/* 0xeb */ JS_INT,
+	/* 0xec */ JS_INT,
+	/* 0xed */ JS_INT,
+	/* 0xee */ JS_INT,
+	/* 0xef */ JS_INT,
+	/* 0xf0 */ JS_INT,
+	/* 0xf1 */ JS_INT,
+	/* 0xf2 */ JS_INT,
+	/* 0xf3 */ JS_INT,
+	/* 0xf4 */ JS_INT,
+	/* 0xf5 */ JS_INT,
+	/* 0xf6 */ JS_INT,
+	/* 0xf7 */ JS_INT,
+	/* 0xf8 */ JS_INT,
+	/* 0xf9 */ JS_INT,
+	/* 0xfa */ JS_INT,
+	/* 0xfb */ JS_INT,
+	/* 0xfc */ JS_INT,
+	/* 0xfd */ JS_INT,
+	/* 0xfe */ JS_INT,
+	/* 0xff */ JS_INT
 	/* }}} */
 };
 
 /**
- * This lookup table used by mp_next() and mp_check() to determine
- * size of MsgPack element by its first byte.
+ * This lookup table used by js_next() and js_check() to determine
+ * size of JSONPack element by its first byte.
  * A positive value contains size of the element (excluding the first byte).
  * A negative value means the element is compound (e.g. array or map)
  * of size (-n).
- * MP_HINT_* values used for special cases handled by switch() statement.
+ * JS_HINT_* values used for special cases handled by switch() statement.
  */
-const int8_t mp_parser_hint[256] = {
-	/* {{{ MP_UINT(fixed) **/
+const int8_t js_parser_hint[256] = {
+	/* {{{ JS_UINT(fixed) **/
 	/* 0x00 */ 0,
 	/* 0x01 */ 0,
 	/* 0x02 */ 0,
@@ -2722,7 +2722,7 @@ const int8_t mp_parser_hint[256] = {
 	/* 0x7f */ 0,
 	/* }}} */
 
-	/* {{{ MP_MAP (fixed) */
+	/* {{{ JS_MAP (fixed) */
 	/* 0x80 */  0, /* empty map - just skip one byte */
 	/* 0x81 */ -2, /* 2 elements follow */
 	/* 0x82 */ -4,
@@ -2741,7 +2741,7 @@ const int8_t mp_parser_hint[256] = {
 	/* 0x8f */ -30,
 	/* }}} */
 
-	/* {{{ MP_ARRAY (fixed) */
+	/* {{{ JS_ARRAY (fixed) */
 	/* 0x90 */  0,  /* empty array - just skip one byte */
 	/* 0x91 */ -1,  /* 1 element follows */
 	/* 0x92 */ -2,
@@ -2760,7 +2760,7 @@ const int8_t mp_parser_hint[256] = {
 	/* 0x9f */ -15,
 	/* }}} */
 
-	/* {{{ MP_STR (fixed) */
+	/* {{{ JS_STR (fixed) */
 	/* 0xa0 */ 0,
 	/* 0xa1 */ 1,
 	/* 0xa2 */ 2,
@@ -2795,69 +2795,69 @@ const int8_t mp_parser_hint[256] = {
 	/* 0xbf */ 31,
 	/* }}} */
 
-	/* {{{ MP_NIL, MP_BOOL */
-	/* 0xc0 */ 0, /* MP_NIL */
+	/* {{{ JS_NIL, JS_BOOL */
+	/* 0xc0 */ 0, /* JS_NIL */
 	/* 0xc1 */ 0, /* never used */
-	/* 0xc2 */ 0, /* MP_BOOL*/
-	/* 0xc3 */ 0, /* MP_BOOL*/
+	/* 0xc2 */ 0, /* JS_BOOL*/
+	/* 0xc3 */ 0, /* JS_BOOL*/
 	/* }}} */
 
-	/* {{{ MP_BIN */
-	/* 0xc4 */ MP_HINT_STR_8,  /* MP_BIN (8)  */
-	/* 0xc5 */ MP_HINT_STR_16, /* MP_BIN (16) */
-	/* 0xc6 */ MP_HINT_STR_32, /* MP_BIN (32) */
+	/* {{{ JS_BIN */
+	/* 0xc4 */ JS_HINT_STR_8,  /* JS_BIN (8)  */
+	/* 0xc5 */ JS_HINT_STR_16, /* JS_BIN (16) */
+	/* 0xc6 */ JS_HINT_STR_32, /* JS_BIN (32) */
 	/* }}} */
 
-	/* {{{ MP_EXT */
-	/* 0xc7 */ MP_HINT_EXT_8,    /* MP_EXT (8)  */
-	/* 0xc8 */ MP_HINT_EXT_16,   /* MP_EXT (16) */
-	/* 0xc9 */ MP_HINT_EXT_32,   /* MP_EXT (32) */
+	/* {{{ JS_EXT */
+	/* 0xc7 */ JS_HINT_EXT_8,    /* JS_EXT (8)  */
+	/* 0xc8 */ JS_HINT_EXT_16,   /* JS_EXT (16) */
+	/* 0xc9 */ JS_HINT_EXT_32,   /* JS_EXT (32) */
 	/* }}} */
 
-	/* {{{ MP_FLOAT, MP_DOUBLE */
-	/* 0xca */ sizeof(float),    /* MP_FLOAT */
-	/* 0xcb */ sizeof(double),   /* MP_DOUBLE */
+	/* {{{ JS_FLOAT, JS_DOUBLE */
+	/* 0xca */ sizeof(float),    /* JS_FLOAT */
+	/* 0xcb */ sizeof(double),   /* JS_DOUBLE */
 	/* }}} */
 
-	/* {{{ MP_UINT */
-	/* 0xcc */ sizeof(uint8_t),  /* MP_UINT (8)  */
-	/* 0xcd */ sizeof(uint16_t), /* MP_UINT (16) */
-	/* 0xce */ sizeof(uint32_t), /* MP_UINT (32) */
-	/* 0xcf */ sizeof(uint64_t), /* MP_UINT (64) */
+	/* {{{ JS_UINT */
+	/* 0xcc */ sizeof(uint8_t),  /* JS_UINT (8)  */
+	/* 0xcd */ sizeof(uint16_t), /* JS_UINT (16) */
+	/* 0xce */ sizeof(uint32_t), /* JS_UINT (32) */
+	/* 0xcf */ sizeof(uint64_t), /* JS_UINT (64) */
 	/* }}} */
 
-	/* {{{ MP_INT */
-	/* 0xd0 */ sizeof(uint8_t),  /* MP_INT (8)  */
-	/* 0xd1 */ sizeof(uint16_t), /* MP_INT (8)  */
-	/* 0xd2 */ sizeof(uint32_t), /* MP_INT (8)  */
-	/* 0xd3 */ sizeof(uint64_t), /* MP_INT (8)  */
+	/* {{{ JS_INT */
+	/* 0xd0 */ sizeof(uint8_t),  /* JS_INT (8)  */
+	/* 0xd1 */ sizeof(uint16_t), /* JS_INT (8)  */
+	/* 0xd2 */ sizeof(uint32_t), /* JS_INT (8)  */
+	/* 0xd3 */ sizeof(uint64_t), /* JS_INT (8)  */
 	/* }}} */
 
-	/* {{{ MP_EXT (fixext) */
-	/* 0xd4 */ 2,  /* MP_EXT (fixext 8)   */
-	/* 0xd5 */ 3,  /* MP_EXT (fixext 16)  */
-	/* 0xd6 */ 5,  /* MP_EXT (fixext 32)  */
-	/* 0xd7 */ 9,  /* MP_EXT (fixext 64)  */
-	/* 0xd8 */ 17, /* MP_EXT (fixext 128) */
+	/* {{{ JS_EXT (fixext) */
+	/* 0xd4 */ 2,  /* JS_EXT (fixext 8)   */
+	/* 0xd5 */ 3,  /* JS_EXT (fixext 16)  */
+	/* 0xd6 */ 5,  /* JS_EXT (fixext 32)  */
+	/* 0xd7 */ 9,  /* JS_EXT (fixext 64)  */
+	/* 0xd8 */ 17, /* JS_EXT (fixext 128) */
 	/* }}} */
 
-	/* {{{ MP_STR */
-	/* 0xd9 */ MP_HINT_STR_8,      /* MP_STR (8) */
-	/* 0xda */ MP_HINT_STR_16,     /* MP_STR (16) */
-	/* 0xdb */ MP_HINT_STR_32,     /* MP_STR (32) */
+	/* {{{ JS_STR */
+	/* 0xd9 */ JS_HINT_STR_8,      /* JS_STR (8) */
+	/* 0xda */ JS_HINT_STR_16,     /* JS_STR (16) */
+	/* 0xdb */ JS_HINT_STR_32,     /* JS_STR (32) */
 	/* }}} */
 
-	/* {{{ MP_ARRAY */
-	/* 0xdc */ MP_HINT_ARRAY_16,   /* MP_ARRAY (16) */
-	/* 0xdd */ MP_HINT_ARRAY_32,   /* MP_ARRAY (32) */
+	/* {{{ JS_ARRAY */
+	/* 0xdc */ JS_HINT_ARRAY_16,   /* JS_ARRAY (16) */
+	/* 0xdd */ JS_HINT_ARRAY_32,   /* JS_ARRAY (32) */
 	/* }}} */
 
-	/* {{{ MP_MAP */
-	/* 0xde */ MP_HINT_MAP_16,     /* MP_MAP (16) */
-	/* 0xdf */ MP_HINT_MAP_32,     /* MP_MAP (32) */
+	/* {{{ JS_MAP */
+	/* 0xde */ JS_HINT_MAP_16,     /* JS_MAP (16) */
+	/* 0xdf */ JS_HINT_MAP_32,     /* JS_MAP (32) */
 	/* }}} */
 
-	/* {{{ MP_INT (fixed) */
+	/* {{{ JS_INT (fixed) */
 	/* 0xe0 */ 0,
 	/* 0xe1 */ 0,
 	/* 0xe2 */ 0,
@@ -2893,7 +2893,7 @@ const int8_t mp_parser_hint[256] = {
 	/* }}} */
 };
 
-const char *mp_char2escape[128] = {
+const char *js_char2escape[128] = {
 	"\\u0000", "\\u0001", "\\u0002", "\\u0003",
 	"\\u0004", "\\u0005", "\\u0006", "\\u0007",
 	"\\b", "\\t", "\\n", "\\u000b",
@@ -2916,7 +2916,7 @@ const char *mp_char2escape[128] = {
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, "\\u007f"
 };
 
-#endif /* defined(MP_SOURCE) */
+#endif /* defined(JS_SOURCE) */
 
 /** \endcond */
 
@@ -2928,10 +2928,10 @@ const char *mp_char2escape[128] = {
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
 
-#undef MP_SOURCE
-#undef MP_PROTO
-#undef MP_IMPL
-#undef MP_ALWAYSINLINE
-#undef MP_GCC_VERSION
+#undef JS_SOURCE
+#undef JS_PROTO
+#undef JS_IMPL
+#undef JS_ALWAYSINLINE
+#undef JS_GCC_VERSION
 
-#endif /* MSGPUCK_H_INCLUDED */
+#endif /* JSONPUCK_H_INCLUDED */

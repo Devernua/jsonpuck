@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 MsgPuck Authors
+ * Copyright (c) 2013-2016 JSONPuck Authors
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or
@@ -30,5 +30,5 @@
  * SUCH DAMAGE.
  */
 
-#define MP_SOURCE 1
-#include "msgpuck.h"
+#define JS_SOURCE 1
+#include "jsonpuck.h"
