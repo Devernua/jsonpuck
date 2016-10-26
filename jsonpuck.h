@@ -1,97 +1,5 @@
 #ifndef JSONPUCK_H_INCLUDED
 #define JSONPUCK_H_INCLUDED
-/*
- * Copyright (c) 2013-2016 JSONPuck Authors
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or
- * without modification, are permitted provided that the following
- * conditions are met:
- *
- * 1. Redistributions of source code must retain the above
- *    copyright notice, this list of conditions and the
- *    following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above
- *    copyright notice, this list of conditions and the following
- *    disclaimer in the documentation and/or other materials
- *    provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY <COPYRIGHT HOLDER> ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
- * <COPYRIGHT HOLDER> OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
- * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
- * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- */
-
-/**
- * \file jsonpuck.h
- * JSONPuck
- * \brief JSONPuck is a simple and efficient JSONPack encoder/decoder
- * library in a single self-contained file.
- *
- * Usage example:
- * \code
- * // Encode
- * char buf[1024];
- * char *w = buf;
- * w = js_encode_array(w, 4)
- * w = js_encode_uint(w, 10);
- * w = js_encode_str(w, "hello world", strlen("hello world"));
- * w = js_encode_bool(w, true);
- * w = js_encode_double(w, 3.1415);
- *
- * // Validate
- * const char *b = buf;
- * int r = js_check(&b, w);
- * assert(!r)
- * assert(b == w);
- *
- * // Decode
- * uint32_t size;
- * uint64_t ival;
- * const char *sval;
- * uint32_t sval_len;
- * bool bval;
- * double dval;
- *
- * const char *r = buf;
- *
- * size = js_decode_array(&r);
- * // size is 4
- *
- * ival = js_decode_uint(&r);
- * // ival is 10;
- *
- * sval = js_decode_str(&r, &sval_len);
- * // sval is "hello world", sval_len is strlen("hello world")
- *
- * bval = js_decode_bool(&r);
- * // bval is true
- *
- * dval = js_decode_double(&r);
- * // dval is 3.1415
- *
- * assert(r == w);
- * \endcode
- *
- * \note Supported compilers.
- * The implementation requires a C99+ or C++03+ compatible compiler.
- *
- * \note Inline functions.
- * The implementation is compatible with both C99 and GNU inline functions.
- * Please define JS_SOURCE 1 before \#include <jsonpuck.h> in a single
- * compilation unit. This module will be used to store non-inlined versions of
- * functions and global tables.
- */
 
 #if defined(__cplusplus) && !defined(__STDC_CONSTANT_MACROS)
 #define __STDC_CONSTANT_MACROS 1 /* make С++ to be happy */
@@ -174,48 +82,14 @@ js_unreachable(void) { assert(0); abort(); }
 #define js_unreachable() (assert(0))
 #endif
 
-#define js_identity(x) (x) /* just to simplify js_load/js_store macroses */
-
-#if JS_GCC_VERSION(4, 8) || __has_builtin(__builtin_bswap16)
-#define js_bswap_u16(x) __builtin_bswap16(x)
-#else /* !JS_GCC_VERSION(4, 8) */
-#define js_bswap_u16(x) ( \
-	(((x) <<  8) & 0xff00) | \
-	(((x) >>  8) & 0x00ff) )
-#endif
-
-#if JS_GCC_VERSION(4, 3) || __has_builtin(__builtin_bswap32)
-#define js_bswap_u32(x) __builtin_bswap32(x)
-#else /* !JS_GCC_VERSION(4, 3) */
-#define js_bswap_u32(x) ( \
-	(((x) << 24) & UINT32_C(0xff000000)) | \
-	(((x) <<  8) & UINT32_C(0x00ff0000)) | \
-	(((x) >>  8) & UINT32_C(0x0000ff00)) | \
-	(((x) >> 24) & UINT32_C(0x000000ff)) )
-#endif
-
-#if JS_GCC_VERSION(4, 3) || __has_builtin(__builtin_bswap64)
-#define js_bswap_u64(x) __builtin_bswap64(x)
-#else /* !JS_GCC_VERSION(4, 3) */
-#define js_bswap_u64(x) (\
-	(((x) << 56) & UINT64_C(0xff00000000000000)) | \
-	(((x) << 40) & UINT64_C(0x00ff000000000000)) | \
-	(((x) << 24) & UINT64_C(0x0000ff0000000000)) | \
-	(((x) <<  8) & UINT64_C(0x000000ff00000000)) | \
-	(((x) >>  8) & UINT64_C(0x00000000ff000000)) | \
-	(((x) >> 24) & UINT64_C(0x0000000000ff0000)) | \
-	(((x) >> 40) & UINT64_C(0x000000000000ff00)) | \
-	(((x) >> 56) & UINT64_C(0x00000000000000ff)) )
-#endif
-
-#define JS_LOAD_STORE(name, type, bswap)					\
+#define JS_LOAD_STORE(name, type)					\
 JS_PROTO type									\
 js_load_##name(const char **data);						\
 JS_IMPL type									\
 js_load_##name(const char **data)						\
 {										\
 	struct JS_PACKED cast { type val; };					\
-	type val = bswap(((struct cast *) *data)->val);				\
+	type val = ((struct cast *) *data)->val;				\
 	*data += sizeof(type);							\
 	return val;								\
 }										\
@@ -225,108 +99,17 @@ JS_IMPL char *									\
 js_store_##name(char *data, type val)						\
 {										\
 	struct JS_PACKED cast { type val; };					\
-	((struct cast *) (data))->val = bswap(val);				\
+	((struct cast *) (data))->val = val;				\
 	return data + sizeof(type);						\
 }
 
-JS_LOAD_STORE(u8, uint8_t, js_identity);
+JS_LOAD_STORE(u8, uint8_t);
+JS_LOAD_STORE(u16, uint16_t);
+JS_LOAD_STORE(u32, uint32_t);
+JS_LOAD_STORE(u64, uint64_t);
+JS_LOAD_STORE(float, float);
+JS_LOAD_STORE(double, double);
 
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-
-JS_LOAD_STORE(u16, uint16_t, js_bswap_u16);
-JS_LOAD_STORE(u32, uint32_t, js_bswap_u32);
-JS_LOAD_STORE(u64, uint64_t, js_bswap_u64);
-
-#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-
-JS_LOAD_STORE(u16, uint16_t, js_identity);
-JS_LOAD_STORE(u32, uint32_t, js_identity);
-JS_LOAD_STORE(u64, uint64_t, js_identity);
-
-#else
-#error Unsupported __BYTE_ORDER__
-#endif
-
-#if !defined(__FLOAT_WORD_ORDER__)
-#define __FLOAT_WORD_ORDER__ __BYTE_ORDER__
-#endif /* defined(__FLOAT_WORD_ORDER__) */
-
-#if __FLOAT_WORD_ORDER__ == __ORDER_LITTLE_ENDIAN__
-
-/*
- * Idiots from jsonpack.org byte-swaps even IEEE754 float/double types.
- * Some platforms (e.g. arm) cause SIGBUS on attempt to store
- * invalid float in registers, so code like flt = js_bswap_float(flt)
- * can't be used here.
- */
-
-union JS_PACKED js_float_cast {
-	uint32_t u32;
-	float f;
-};
-
-union JS_PACKED js_double_cast {
-	uint64_t u64;
-	double d;
-};
-
-JS_PROTO float
-js_load_float(const char **data);
-JS_PROTO double
-js_load_double(const char **data);
-JS_PROTO char *
-js_store_float(char *data, float val);
-JS_PROTO char *
-js_store_double(char *data, double val);
-
-JS_IMPL float
-js_load_float(const char **data)
-{
-	union js_float_cast cast = *(union js_float_cast *) *data;
-	*data += sizeof(cast);
-	cast.u32 = js_bswap_u32(cast.u32);
-	return cast.f;
-}
-
-JS_IMPL double
-js_load_double(const char **data)
-{
-	union js_double_cast cast = *(union js_double_cast *) *data;
-	*data += sizeof(cast);
-	cast.u64 = js_bswap_u64(cast.u64);
-	return cast.d;
-}
-
-JS_IMPL char *
-js_store_float(char *data, float val)
-{
-	union js_float_cast cast;
-	cast.f = val;
-	cast.u32 = js_bswap_u32(cast.u32);
-	*(union js_float_cast *) (data) = cast;
-	return data + sizeof(cast);
-}
-
-JS_IMPL char *
-js_store_double(char *data, double val)
-{
-	union js_double_cast cast;
-	cast.d = val;
-	cast.u64 = js_bswap_u64(cast.u64);
-	*(union js_double_cast *) (data) = cast;
-	return data + sizeof(cast);
-}
-
-#elif __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
-
-JS_LOAD_STORE(float, float, js_identity);
-JS_LOAD_STORE(double, double, js_identity);
-
-#else
-#error Unsupported __FLOAT_WORD_ORDER__
-#endif
-
-#undef js_identity
 #undef JS_LOAD_STORE
 
 /** \endcond */
